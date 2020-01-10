@@ -15,6 +15,7 @@ from legos.xkcd import XKCD
 import yaml
 
 # from Local.aoc import AOC
+from Local.bible import Bible
 from Local.challenge import Challenge
 from Local.dictator import Dictator
 from Local.moin import Moin
