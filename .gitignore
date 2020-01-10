@@ -1,0 +1,14 @@
+*.pyc
+.vagrant/
+tips.cfg
+redis-data/*
+config.ini
+config.yaml
+temp/
+venv/*
+.env
+.vscode/
+.DS_Store
+.cache
+.pytest_cache
+.python-version
