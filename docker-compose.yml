@@ -1,0 +1,17 @@
+version: "3"
+services:
+  chatbot:
+    restart: always
+    image: drewpearce/trd-fraqbot
+    env_file: .env
+    volumes:
+      - "$HOME/logs:/tmp/logs"
+      - "./config.yaml:/usr/src/app/config.yaml"
+    networks:
+      legobot:
+        aliases:
+          - legobot
+
+networks:
+  legobot:
+    external: false

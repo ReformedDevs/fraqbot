@@ -1,0 +1,15 @@
+Legobot>=1.2.5
+legos.xkcd==0.2.1
+legos.wtf
+legos.stocks
+legos.codinglove
+# legos.dice
+legos.ctftime
+legos.fact_sphere==0.2.2
+legos.memes>=0.3.3
+legos.apod
+#legos.markov
+#redis==2.10.6
+#markovify
+#nltk
+pyyaml
