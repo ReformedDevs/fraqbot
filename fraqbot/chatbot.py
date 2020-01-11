@@ -75,3 +75,4 @@ baseplate_proxy.add_child(
 baseplate_proxy.add_child(XMasPlot, api=xmas_api)
 baseplate_proxy.add_child(Challenge)
 baseplate_proxy.add_child(Dictator, token=slack_admin_token)
+baseplate_proxy.add_child(Bible)
