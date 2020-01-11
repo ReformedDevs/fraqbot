@@ -5,7 +5,7 @@ import threading
 from Legobot.Connectors.Slack import Slack
 from Legobot.Lego import Lego
 from Legobot.Legos.Help import Help
-# from legos.apod import APOD
+from legos.apod import APOD
 # from legos.dice import Roll
 from legos.fact_sphere import FactSphere
 from legos.memes import Memes
@@ -29,6 +29,7 @@ with open(os.path.join(DIR, 'config.yaml')) as f:
 
 slack_token = config.get('slackToken')
 slack_admin_token = config.get('adminToken')
+apod_key = config.get('apodKey')
 aoc_cookie = config.get('aocCookie')
 aoc_year = config.get('aocYear')
 aoc_board = config.get('aocBoard')
@@ -63,7 +64,7 @@ baseplate_proxy.add_child(Help)
 baseplate_proxy.add_child(XKCD)
 # baseplate_proxy.add_child(Cryptocurrency)
 baseplate_proxy.add_child(Memes)
-# baseplate_proxy.add_child(APOD)
+baseplate_proxy.add_child(APOD, key=apod_key)
 baseplate_proxy.add_child(FactSphere)
 baseplate_proxy.add_child(Moin, url_base=moin_base)
 baseplate_proxy.add_child(
