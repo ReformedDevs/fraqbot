@@ -4,10 +4,11 @@ RUN mkdir /tmp/logs
 WORKDIR /usr/src/app
 
 # Get specific Legobot
-RUN git clone https://github.com/Legobot/Legobot
-WORKDIR /usr/src/app/Legobot
-RUN git checkout release-1.2.6
-RUN pip install -e .
+# Only necessary if desired commit isn't available on pypi
+# RUN git clone https://github.com/Legobot/Legobot
+# WORKDIR /usr/src/app/Legobot
+# RUN git checkout release-1.2.6
+# RUN pip install -e .
 
 # copy local stuff
 WORKDIR /usr/src/app
