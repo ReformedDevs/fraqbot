@@ -10,6 +10,7 @@ class Bible(Lego):
         return message['text'].split()[0] == '!bible'
 
     def handle(self, message):
+        logger.debug('Handling Bibile request: {}'.format(message['text']))
         try:
             target = message['metadata']['source_channel']
             opts = {'target': target}
@@ -21,9 +22,11 @@ class Bible(Lego):
         passage = message['text'].replace(
                     message['text'].split()[0], '').strip()
 
+        logger.debug('Calling Bible API: {}{}'.format(base_url, passage))
         r = requests.get(base_url + passage)
 
         if r.status_code == requests.codes.ok:
+            logger.debug('Bible API responded positively.')
             reference = r.json()['reference']
             text = r.json()['text']
             self.reply(message, reference + ':\n' + text, opts)
