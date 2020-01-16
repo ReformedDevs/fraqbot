@@ -19,6 +19,7 @@ from Local.bible import Bible
 from Local.challenge import Challenge
 from Local.dictator import Dictator
 from Local.moin import Moin
+from Local.slumberclack import SlumberClack
 from Local.xmasplot import XMasPlot
 from Local.yourface import YourFace
 
@@ -73,6 +74,7 @@ baseplate_proxy.add_child(
 # baseplate_proxy.add_child(
 #     AOC, cookie=aoc_cookie, year=aoc_year, board=aoc_board)
 # baseplate_proxy.add_child(Wat)
+baseplate_proxy.add_child(SlumberClack)
 baseplate_proxy.add_child(XMasPlot, api=xmas_api)
 baseplate_proxy.add_child(Challenge)
 baseplate_proxy.add_child(Dictator, token=slack_admin_token)
