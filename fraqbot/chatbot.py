@@ -73,7 +73,7 @@ baseplate_proxy.add_child(
 # baseplate_proxy.add_child(
 #     AOC, cookie=aoc_cookie, year=aoc_year, board=aoc_board)
 # baseplate_proxy.add_child(Wat)
-baseplate_proxy.add_child(SlumberClack)
+baseplate_proxy.add_child(SlumberClack, config=config.get('SlumberClack', {}))
 baseplate_proxy.add_child(XMasPlot, api=xmas_api)
 baseplate_proxy.add_child(Challenge)
 baseplate_proxy.add_child(Dictator, config=config.get('Dictator', {}))
