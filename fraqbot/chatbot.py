@@ -30,7 +30,6 @@ with open(os.path.join(DIR, 'config.yaml')) as f:
     config = yaml.safe_load(f)
 
 slack_token = config.get('slackToken')
-slack_admin_token = config.get('adminToken')
 apod_key = config.get('apodKey')
 aoc_cookie = config.get('aocCookie')
 aoc_year = config.get('aocYear')
@@ -77,5 +76,5 @@ baseplate_proxy.add_child(
 baseplate_proxy.add_child(SlumberClack)
 baseplate_proxy.add_child(XMasPlot, api=xmas_api)
 baseplate_proxy.add_child(Challenge)
-baseplate_proxy.add_child(Dictator, token=slack_admin_token)
+baseplate_proxy.add_child(Dictator, config=config.get('Dictator', {}))
 baseplate_proxy.add_child(Bible)
