@@ -10,22 +10,8 @@ logger = logging.getLogger(__name__)
 class Dictator(Lego):
     def __init__(self, baseplate, lock, *args, **kwargs):
         super().__init__(baseplate, lock)
-        self.token = kwargs.get('token', '')
-        self.conditions = [
-            {
-                'type': 'regex',
-                'text': r'(<!channel>)|(@channel)',
-                'user_exceptions': [
-                    'U1YMD6Z4L',  # specs
-                    'U0H0F95TJ',  # chuck
-                    'U1ZB3CFV3'  # jeff
-                ]
-            },
-            {
-                'type': 'match',
-                'text': 'woke'
-            }
-        ]
+        self.token = kwargs.get('config', {}).get('adminToken', '')
+        self.conditions = kwargs.get('config', {}).get('conditions', [{}])
 
     def listening_for(self, message):
         if (message.get('text')
@@ -38,13 +24,16 @@ class Dictator(Lego):
                 return False
 
     @staticmethod
-    def _check_regex(message, check):
+    def _check_regex(message, check, options):
         check = re.compile(check, re.IGNORECASE)
         matches = re.search(check, message.replace('`', ''))
         return matches
 
     @staticmethod
-    def _check_match(message, check):
+    def _check_match(message, check, options):
+        if 'case insensitive' in options:
+            return check.lower() in message.lower()
+
         return check in message
 
     def _check_conditions(self, message):
@@ -56,7 +45,10 @@ class Dictator(Lego):
             if (message['metadata'].get('source_user')
                     not in condition.get('user_exceptions', [])):
                 test = types[condition.get('type', self._check_match)](
-                    message['text'], condition.get('text'))
+                    message['text'],
+                    condition.get('text'),
+                    condition.get('options', [])
+                )
                 if test:
                     return True
 
