@@ -3,7 +3,7 @@
 tips.cfg
 redis-data/*
 config.ini
-config.yaml
+*config.yaml
 temp/
 venv/*
 .env
