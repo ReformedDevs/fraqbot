@@ -173,6 +173,6 @@ class SlumberClack(Lego):
 
     def _handle_matches(self, match):
         response = self._get_single(match[1])
-        self._suggest(match[1], match[2])
+        self._suggest(match[1], match[2], match[3])
 
         return response
