@@ -17,50 +17,74 @@ class SlumberClack(Lego):
         self.base_url = self.config.get('clackApi', '')
         self.approvers = self.config.get('approvers', [])
         self.token = self.config.get('token', '')
-        self.operation = None
+        self.meta_conditions = self.config.get('metaConditions', {})
         self.matches = []
 
     def listening_for(self, message):
+        if self.meta_conditions and self._check_meta(message):
+            return False
+
         if not isinstance(message.get('text'), str):
             return False
 
+        source_user = message.get('metadata', {}).get('source_user')
         if message['text'].startswith('!suggest'):
-            self.operation = 'suggest'
+            self.matches.append(('suggest', message['text'], source_user))
             return True
         elif message['text'].startswith('!approve'):
-            self.operation = 'approve'
+            self.matches.append(('approve', message['text'], source_user))
             return True
         else:
             for k, v in self.listeners.items():
                 if message['text'].startswith('!' + k):
-                    self.operation = k
+                    self.matches.append((k, message['text'], source_user))
                     return True
 
                 match = re.search(re.compile(v.get('r', '')), message['text'])
                 if match:
-                    self.matches.append((v.get('path', ''), match[0]))
+                    self.matches.append((
+                        'match',
+                        v.get('path', ''),
+                        match[0],
+                        source_user
+                    ))
 
         return self.matches
 
     def handle(self, message):
-        op = self.operation
-        self.operation = None
         responses = []
-        standard_ops = {
+        ops = {
             'suggest': self._handle_suggest,
-            'approve': self._handle_approve
+            'approve': self._handle_approve,
+            'match': self._handle_matches
         }
-        if op in standard_ops:
-            responses.append(standard_ops[op](message))
-        elif op in self.listeners:
-            responses.append(self._handle_items(op, message))
-        elif self.matches:
-            while self.matches:
-                responses.append(self._handle_matches(self.matches.pop()))
+        for k in self.listeners.keys():
+            ops[k] = self._handle_items
+        while self.matches:
+            match = self.matches.pop()
+            op = match[0]
+            if op in ops:
+                responses.append(ops[op](match))
 
         for response in responses:
             opts = self.build_reply_opts(message)
             self.reply(message, response, opts)
+
+    def _check_meta(self, message):
+        for k, v in self.meta_conditions.items():
+            test = message.get('metadata', {}).get(k)
+            if test:
+                for op, value in v.items():
+                    conditions = {
+                        'eq': test == value if value else False,
+                        'ne': test != value if value else True,
+                        'in': test in value,
+                        'not_in': test not in value
+                    }
+                    if conditions[op]:
+                        return True
+
+        return False
 
     def _call_api(self, url, **kwargs):
         call = requests.get(url, **kwargs)
@@ -85,16 +109,16 @@ class SlumberClack(Lego):
             if not response.get('ok'):
                 logger.error(f'Error notifying user {user}: {response}')
 
-    def _handle_suggest(self, message):
-        splt = message['text'].split(' ')
+    def _handle_suggest(self, match):
+        splt = match[1].split(' ')
         if len(splt) < 3 or splt[1] not in self.listeners:
             return 'Please provide a valid suggestion.'
         else:
-            return self._suggest(splt[1], splt[2])
+            return self._suggest(splt[1], splt[2], match[2])
 
-    def _suggest(self, path, term):
+    def _suggest(self, path, term, user):
         url = '/'.join([self.base_url, path, 'suggest'])
-        response = self._call_api(url, params={'term': term})
+        response = self._call_api(url, params={'term': term, 'user': user})
         msg = response.get('message', '')
         if not response.get('status'):
             logger.error(f'Bad Suggestion: {msg}')
@@ -103,12 +127,11 @@ class SlumberClack(Lego):
 
         return msg
 
-    def _handle_approve(self, message):
-        user = message.get('metadata', {}).get('source_user', '')
-        if user not in self.approvers:
+    def _handle_approve(self, match):
+        if match[2] not in self.approvers:
             return 'You are not authorized for approvals.'
 
-        splt = message['text'].split(' ')
+        splt = match[1].split(' ')
         if len(splt) < 3 or splt[1] not in self.listeners:
             return 'Please provide a valid approval.'
         else:
@@ -132,12 +155,13 @@ class SlumberClack(Lego):
         url = '/'.join([self.base_url, op, 'all'])
         response = self._call_api(url)
         if response:
-            response = '```{}```'.format('\n'.join(response))
+            response = '```{}```'.format('\n'.join(sorted(response)))
 
         return response
 
-    def _handle_items(self, op, message):
-        text = message['text']
+    def _handle_items(self, match):
+        op = match[0]
+        text = match[1]
         if len(text.split(' ')) == 1:
             response = self._get_single(op)
         elif text.split(' ')[1] == 'all':
@@ -148,7 +172,7 @@ class SlumberClack(Lego):
         return response
 
     def _handle_matches(self, match):
-        response = self._get_single(match[0])
-        self._suggest(match[0], match[1])
+        response = self._get_single(match[1])
+        self._suggest(match[1], match[2])
 
         return response
