@@ -130,7 +130,8 @@ class SlumberClack(Lego):
         if not response.get('status'):
             logger.error(f'Bad Suggestion: {msg}')
         else:
-            self._notify(f'New suggestion: `{term}`')
+            msg = f'New suggestion from <@{user}>:\n`{term}`'
+            self._notify(msg)
 
         return msg
 
@@ -142,16 +143,18 @@ class SlumberClack(Lego):
         if len(splt) < 3 or splt[1] not in self.listeners:
             return 'Please provide a valid approval.'
         else:
-            return self._approve(splt[1], splt[2])
+            return self._approve(splt[1], splt[2], match[2])
 
-    def _approve(self, path, term):
+    def _approve(self, path, term, approver):
         url = '/'.join([self.base_url, path, 'approve'])
         response = self._call_api(url, params={'term': term})
         msg = response.get('message', '')
         if not response.get('status'):
             logger.error(f'Bad Approval: {msg}')
+        else:
+            self._notify(f'`{term}` approved by <@{approver}>.')
 
-        return msg
+        return None
 
     def _get_single(self, op):
         url = '/'.join([self.base_url, op])
