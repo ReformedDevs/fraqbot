@@ -186,3 +186,26 @@ class SlumberClack(Lego):
         self._suggest(match[1], match[2], match[3], match[4])
 
         return response
+
+    def get_name(self):
+        return 'Clacks'
+
+    def get_help(self, **kwargs):
+        lines = [
+            ('A system for keeping up with our beloved SimpleCast and '
+             'HyperGiant.'),
+            ('Come up with your best iteration and I\'ll add it to the list '
+             'for approval. To invoke directly: ')
+        ]
+
+        for name, info in self.listeners.items():
+            solo = name[:-1] if name.endswith('s') else name
+            lines.append(f'\n- Get a {solo}: `!{name}`')
+            lines.append(f'- Get all {name}: `!{name} all`')
+            lines.append(f'- Suggest a {solo}: `!suggest {name} <suggestion>`')
+            lines.append(f'- Approve a {solo}: `!approve {name} <suggestion>`')
+
+        approvers = ', '.join([f'<@{a}>' for a in self.approvers])
+        lines.append(f'Current approvers: {approvers}')
+
+        return '\n'.join(lines)
