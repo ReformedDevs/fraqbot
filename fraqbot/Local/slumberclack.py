@@ -17,10 +17,14 @@ class SlumberClack(Lego):
         self.base_url = self.config.get('clackApi', '')
         self.approvers = self.config.get('approvers', [])
         self.token = self.config.get('token', '')
+        self.self = self.config.get('self', '')
         self.meta_conditions = self.config.get('metaConditions', {})
         self.matches = []
 
     def listening_for(self, message):
+        if message.get('metadata', {}).get('source_user', '') == self.self:
+            return False
+
         if self.meta_conditions and self._check_meta(message):
             return False
 
