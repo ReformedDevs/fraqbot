@@ -33,7 +33,10 @@ class SlumberClack(Lego):
 
         source_user = message.get('metadata', {}).get('source_user')
         ts = message.get('metadata', {}).get('ts')
-        if message['text'].startswith('!suggest'):
+        if message['text'].startswith('!suggestions'):
+            self.matches.append(('suggestions', message['text']))
+            return True
+        elif message['text'].startswith('!suggest'):
             self.matches.append(('suggest', message['text'], source_user, ts))
             return True
         elif message['text'].startswith('!approve'):
@@ -60,6 +63,7 @@ class SlumberClack(Lego):
     def handle(self, message):
         responses = []
         ops = {
+            'suggestions': self._handle_suggestions,
             'suggest': self._handle_suggest,
             'approve': self._handle_approve,
             'match': self._handle_matches
@@ -114,6 +118,15 @@ class SlumberClack(Lego):
             response = self._call_api(url, params=params)
             if not response.get('ok'):
                 logger.error(f'Error notifying user {user}: {response}')
+
+    def _handle_suggestions(self, match):
+        splt = match[1].split(' ')
+        if len(splt) < 2 or splt[1] not in self.listeners:
+            return 'Please provide a valid suggestions command.'
+        else:
+            url = self.base_url + '/' + splt[1] + '/suggestions'
+            resp = self._call_api(url)
+            return '```{}```'.format('\n'.join(sorted(resp)))
 
     def _handle_suggest(self, match):
         splt = match[1].split(' ')
