@@ -203,7 +203,10 @@ class SlumberClack(Lego):
             lines.append(f'\n- Get a {solo}: `!{name}`')
             lines.append(f'- Get all {name}: `!{name} all`')
             lines.append(f'- Suggest a {solo}: `!suggest {name} <suggestion>`')
+            lines.append((f'- See all {solo} suggestions: '
+                          f'`!suggetsions {name}`'))
             lines.append(f'- Approve a {solo}: `!approve {name} <suggestion>`')
+            lines.append(f'- Reject a {solo}: `!reject {name} <suggestion>`')
 
         approvers = ', '.join([f'<@{a}>' for a in self.approvers])
         lines.append(f'Current approvers: {approvers}')
