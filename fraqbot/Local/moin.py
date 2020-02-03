@@ -29,24 +29,28 @@ class Moin(Lego):
         if message.get('text') and message['metadata'].get('display_name'):
             try:
                 text = message.get('text').lower()
-                user = message['metadata'].get('display_name')
-                if 'moin' in text and user in self.image_map.keys():
-                    return True
+                return 'moin' in text
             except Exception as e:
                 logger.error(('LegoName lego failed to check the message text:'
                              ' {}').format(e))
                 return False
 
-    def handle(self, message):
-        if int(round(time.time())) > self.map_timestamp + 300:
+    def _get_url(self, message):
+        source_user = message['metadata'].get('source_user', '')
+        display_name = message['metadata'].get('display_name', '')
+        url = self.image_map.get(source_user, self.image_map.get(display_name))
+        if not url and int(round(time.time())) > self.map_timestamp + 300:
             self.load_map(5)
+            url = self.image_map.get(
+                source_user, self.image_map.get(display_name))
 
-        opts = self.build_reply_opts(message)
-        attachment = self.image_map.get(
-            message['metadata'].get('display_name', 'None'),
-            f'{self.url_base}moin.jpg'
-        )
-        self.reply_attachment(message, 'moin', attachment, opts=opts)
+        return url
+
+    def handle(self, message):
+        url = self._get_url(message)
+        if url:
+            opts = self.build_reply_opts(message)
+            self.reply_attachment(message, 'moin', url, opts=opts)
 
     def get_name(self):
         return ''
