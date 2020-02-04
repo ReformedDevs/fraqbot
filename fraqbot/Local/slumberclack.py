@@ -42,6 +42,9 @@ class SlumberClack(Lego):
         elif message['text'].startswith('!approve'):
             self.matches.append(('approve', message['text'], source_user))
             return True
+        elif message['text'].startswith('!reject'):
+            self.matches.append(('reject', message['text'], source_user))
+            return True
         else:
             for k, v in self.listeners.items():
                 if message['text'].startswith('!' + k):
