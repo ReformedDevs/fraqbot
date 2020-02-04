@@ -69,6 +69,7 @@ class SlumberClack(Lego):
             'suggestions': self._handle_suggestions,
             'suggest': self._handle_suggest,
             'approve': self._handle_approve,
+            'reject': self._handle_reject,
             'match': self._handle_matches
         }
         for k in self.listeners.keys():
@@ -109,13 +110,21 @@ class SlumberClack(Lego):
             logger.error(msg)
             return None
 
-    def _notify(self, text):
+    def _notify(self, text, extra_users=None):
         url = 'https://slack.com/api/chat.postMessage'
         params = {
             'token': self.token,
             'text': text,
             'as_user': True
         }
+        recipients = self.approvers
+
+        if extra_users:
+            if not isinstance(extra_users, list):
+                extra_users = [extra_users]
+
+            recipients += extra_users
+
         for user in self.approvers:
             params['channel'] = user
             response = self._call_api(url, params=params)
@@ -161,6 +170,16 @@ class SlumberClack(Lego):
         else:
             return self._approve(splt[1], splt[2], match[2])
 
+    def _handle_reject(self, match):
+        if match[2] not in self.approvers:
+            return 'You are not authorized for approvals.'
+
+        splt = match[1].split(' ')
+        if len(splt) < 3 or splt[1] not in self.listeners:
+            return 'Please provide a valid approval.'
+        else:
+            return self._reject(splt[1], splt[2], match[2])
+
     def _approve(self, path, term, approver):
         url = '/'.join([self.base_url, path, 'approve'])
         response = self._call_api(url, params={'term': term})
@@ -168,9 +187,24 @@ class SlumberClack(Lego):
         if not response.get('status'):
             logger.error(f'Bad Approval: {msg}')
         else:
-            self._notify(f'`{term}` approved by <@{approver}>.')
+            self._notify(
+                f'`{term}` approved by <@{approver}>.',
+                extra_users=response.get('user')
+            )
 
         return None
+
+    def _reject(self, path, term, approver):
+        url = '/'.join([self.base_url, path, 'reject'])
+        response = self._call_api(url, params={'term': term})
+        msg = response.get('message', '')
+        if not response.get('status'):
+            logger.error(f'Bad Rejection: {msg}')
+        else:
+            self._notify(
+                f'`{term}` rejected by <@{approver}>.',
+                extra_users=response.get('user')
+            )
 
     def _get_single(self, op):
         url = '/'.join([self.base_url, op])
