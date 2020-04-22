@@ -15,7 +15,7 @@ from legos.xkcd import XKCD
 import yaml
 
 # from Local.aoc import AOC
-from Local.bible import Bible
+# from Local.bible import Bible
 from Local.challenge import Challenge
 from Local.dictator import Dictator
 from Local.moin import Moin
@@ -78,4 +78,4 @@ baseplate_proxy.add_child(SlumberClack, config=config.get('SlumberClack', {}))
 baseplate_proxy.add_child(XMasPlot, api=xmas_api)
 baseplate_proxy.add_child(Challenge)
 baseplate_proxy.add_child(Dictator, config=config.get('Dictator', {}))
-baseplate_proxy.add_child(Bible)
+# baseplate_proxy.add_child(Bible)

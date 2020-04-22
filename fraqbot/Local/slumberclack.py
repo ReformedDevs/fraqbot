@@ -119,11 +119,11 @@ class SlumberClack(Lego):
         }
         recipients = self.approvers
 
-        if extra_users:
-            if not isinstance(extra_users, list):
-                extra_users = [extra_users]
+        # if extra_users:
+        #     if not isinstance(extra_users, list):
+        #         extra_users = [extra_users]
 
-            recipients += extra_users
+        #     recipients += extra_users
 
         for user in self.approvers:
             params['channel'] = user
