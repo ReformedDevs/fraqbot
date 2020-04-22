@@ -17,7 +17,10 @@ class Moin(Lego):
         config_url = f'{self.url_base}moins.yaml'
         get_map = requests.get(config_url)
         if get_map.status_code == requests.codes.ok:
-            self.image_map = yaml.safe_load(get_map.text)
+            self.image_map = {
+                k: self.url_base + v for k, v in
+                yaml.safe_load(get_map.text).items()
+            }
         elif retries > 0:
             self.load_map(retries - 1)
         else:
