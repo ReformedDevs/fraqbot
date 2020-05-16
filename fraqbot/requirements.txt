@@ -1,4 +1,4 @@
-Legobot>=1.2.6
+Legobot>=1.3.1
 legos.xkcd==0.2.1
 legos.wtf
 legos.stocks
