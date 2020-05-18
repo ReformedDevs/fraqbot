@@ -65,14 +65,15 @@ class XKCD(Lego):
         else:
             logger.error(f'{get_comic.status_code}: {get_comic.txt}')
             return None, None
-    
+
     def _parse_for_comic(self, comic):
         if comic:
-            text = comic['img']
+            text = ' '
             attachment = {
                 'pre_text': '*#{}: {}*'.format(comic['num'], comic['title']),
                 'url': comic['img'],
-                'post_text': '_{}_'.format(comic['alt'])
+                'post_text': '_{}_'.format(
+                    comic['alt'].replace(comic['img'], ''))
             }
             return text, attachment
         else:
