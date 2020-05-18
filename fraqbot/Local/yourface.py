@@ -33,7 +33,7 @@ def requests_retry_session(
 
 class YourFace(Lego):
     def __init__(self, baseplate, lock, *args, **kwargs):
-        super().__init__(baseplate, lock)
+        super().__init__(baseplate, lock, acl=kwargs.get('acl'))
         self.token = kwargs.get('token')
         self.api = kwargs.get('api', '')
         self.url_base = kwargs.get('url_base', '')

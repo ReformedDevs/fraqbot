@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class XMasPlot(Lego):
     def __init__(self, baseplate, lock, *args, **kwargs):
-        super().__init__(baseplate, lock)
+        super().__init__(baseplate, lock, acl=kwargs.get('acl'))
         self.api = kwargs.get('api', '')
 
     def listening_for(self, message):

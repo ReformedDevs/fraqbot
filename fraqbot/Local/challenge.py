@@ -1,4 +1,3 @@
-from datetime import datetime
 import json
 from Legobot.Lego import Lego
 import logging
@@ -10,9 +9,6 @@ README = ('https://raw.githubusercontent.com/ReformedDevs/challenge-2019-09/'
 
 
 class Challenge(Lego):
-    def __init__(self, baseplate, lock, *args, **kwargs):
-        super().__init__(baseplate, lock)
-
     def listening_for(self, message):
         if message and isinstance(message, dict) and message.get('text'):
             return '!scores' in str(message['text'])
@@ -46,7 +42,7 @@ class Challenge(Lego):
         logger.debug(f'HTTP request: {code}: {url}')
         if code != requests.codes.ok:
             return None
-        
+
         return json.loads(text).get('Overall Rankings')
 
     def _get_readme(self):
@@ -153,8 +149,8 @@ class Challenge(Lego):
                 else:
                     d = 'center'
                     p = None
-                l = lengths.get(k, len(k))
-                vals.append(self._justify(o.get(k, ''), l, d, p))
+                ls = lengths.get(k, len(k))
+                vals.append(self._justify(o.get(k, ''), ls, d, p))
 
             lines.append('|'.join(vals))
 

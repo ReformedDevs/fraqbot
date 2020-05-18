@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class Dictator(Lego):
     def __init__(self, baseplate, lock, *args, **kwargs):
-        super().__init__(baseplate, lock)
+        super().__init__(baseplate, lock, acl=kwargs.get('acl'))
         self.token = kwargs.get('config', {}).get('adminToken', '')
         self.conditions = kwargs.get('config', {}).get('conditions', [{}])
 

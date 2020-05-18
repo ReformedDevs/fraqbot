@@ -10,7 +10,7 @@ TWOPLACES = Decimal(10) ** -2
 
 class AOC(Lego):
     def __init__(self, baseplate, lock, *args, **kwargs):
-        super().__init__(baseplate, lock)
+        super().__init__(baseplate, lock, acl=kwargs.get('acl'))
         self.cookie = kwargs.get('cookie')
         self.year = kwargs.get('year')
         self.board = kwargs.get('board')

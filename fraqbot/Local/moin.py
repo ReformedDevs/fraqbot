@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class Moin(Lego):
     def __init__(self, baseplate, lock, *args, **kwargs):
-        super().__init__(baseplate, lock)
+        super().__init__(baseplate, lock, acl=kwargs.get('acl'))
         self.url_base = kwargs.get('url_base')
         self.api_base = kwargs.get('api_base')
 

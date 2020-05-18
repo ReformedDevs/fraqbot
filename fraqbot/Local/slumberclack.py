@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class SlumberClack(Lego):
     def __init__(self, baseplate, lock, *args, **kwargs):
-        super().__init__(baseplate, lock)
+        super().__init__(baseplate, lock, acl=kwargs.get('acl'))
         self.config = kwargs.get('config', {})
         self.listeners = self.config.get('listeners', {})
         self.base_url = self.config.get('clackApi', '')
