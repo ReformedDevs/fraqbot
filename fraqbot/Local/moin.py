@@ -46,8 +46,7 @@ class Moin(Lego):
             return None
 
     def listening_for(self, message):
-        return ('moin' in message.get('text', '').lower()
-                and message.get('metadata', {}).get('source_user'))
+        return 'moin' in str(message.get('text')).lower()
 
     def handle(self, message):
         moin = self._get_user_moin(message['metadata']['source_user'])
