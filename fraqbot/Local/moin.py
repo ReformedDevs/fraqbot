@@ -13,6 +13,17 @@ class Moin(Lego):
         super().__init__(baseplate, lock, acl=kwargs.get('acl'))
         self.url_base = kwargs.get('url_base')
         self.api_base = kwargs.get('api_base')
+        self._update_acl()
+
+    def _update_acl(self):
+        if not self.acl:
+            self.acl = {}
+
+        if 'whitelist' not in self.acl:
+            self.acl['whitelist'] = sorted([
+                k for k in
+                self._call_api('get', self.api_base).keys()
+            ])
 
     def _call_api(self, method, url, payload=None):
         if method == 'get':
