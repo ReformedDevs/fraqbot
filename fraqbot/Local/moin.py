@@ -1,8 +1,9 @@
-from Legobot.Lego import Lego
+import json
 import logging
+
+from Legobot.Lego import Lego
 import requests
-import time
-import yaml
+
 
 logger = logging.getLogger(__name__)
 
@@ -11,49 +12,37 @@ class Moin(Lego):
     def __init__(self, baseplate, lock, *args, **kwargs):
         super().__init__(baseplate, lock)
         self.url_base = kwargs.get('url_base')
-        self.load_map(5)
+        self.api_base = kwargs.get('api_base')
 
-    def load_map(self, retries):
-        config_url = f'{self.url_base}moins.yaml'
-        get_map = requests.get(config_url)
-        if get_map.status_code == requests.codes.ok:
-            self.image_map = {
-                k: self.url_base + v for k, v in
-                yaml.safe_load(get_map.text).items()
-            }
-        elif retries > 0:
-            self.load_map(retries - 1)
+    def _call_api(self, method, url, payload=None):
+        if method == 'get':
+            response = requests.get(url)
+            if response.status_code == requests.codes.ok:
+                response = json.loads(response.text)
+            else:
+                response = None
         else:
-            self.image_map = {}
+            response = None
 
-        self.map_timestamp = int(round(time.time()))
+        return response
+
+    def _get_user_moin(self, user):
+        url = f'{self.api_base}/{user}'
+        f_name = self._call_api('get', url)
+        if f_name:
+            return f'{self.url_base}{f_name}'
+        else:
+            return None
 
     def listening_for(self, message):
-        if message.get('text') and message['metadata'].get('display_name'):
-            try:
-                text = message.get('text').lower()
-                return 'moin' in text
-            except Exception as e:
-                logger.error(('LegoName lego failed to check the message text:'
-                             ' {}').format(e))
-                return False
-
-    def _get_url(self, message):
-        source_user = message['metadata'].get('source_user', '')
-        display_name = message['metadata'].get('display_name', '')
-        url = self.image_map.get(source_user, self.image_map.get(display_name))
-        if not url and int(round(time.time())) > self.map_timestamp + 300:
-            self.load_map(5)
-            url = self.image_map.get(
-                source_user, self.image_map.get(display_name))
-
-        return url
+        return ('moin' in message.get('text', '').lower()
+                and message.get('metadata', {}).get('source_user'))
 
     def handle(self, message):
-        url = self._get_url(message)
-        if url:
+        moin = self._get_user_moin(message['metadata']['source_user'])
+        if moin:
             opts = self.build_reply_opts(message)
-            self.reply_attachment(message, 'moin', url, opts=opts)
+            self.reply_attachment(message, 'moin', moin, opts=opts)
 
     def get_name(self):
         return ''
