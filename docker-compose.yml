@@ -1,8 +1,10 @@
 version: "3.5"
 services:
   chatbot:
+    container_name: fraqbot
     restart: always
     image: drewpearce/trd-fraqbot
+    # build: fraqbot/
     env_file: .env
     volumes:
       - "$HOME/logs:/tmp/logs"
