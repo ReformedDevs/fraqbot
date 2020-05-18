@@ -1,9 +1,9 @@
-import json
 import logging
 import re
 
 from Legobot.Lego import Lego
-import requests
+
+from .helpers import call_rest_api
 
 
 logger = logging.getLogger(__name__)
@@ -100,16 +100,6 @@ class SlumberClack(Lego):
 
         return False
 
-    def _call_api(self, url, **kwargs):
-        call = requests.get(url, **kwargs)
-        if call.status_code == requests.codes.ok:
-            return json.loads(call.text)
-        else:
-            msg = (f'An error ocurred calling {url}. '
-                   f'{call.status_code}: {call.text}')
-            logger.error(msg)
-            return None
-
     def _notify(self, text, extra_users=None):
         url = 'https://slack.com/api/chat.postMessage'
         params = {
@@ -117,19 +107,9 @@ class SlumberClack(Lego):
             'text': text,
             'as_user': True
         }
-        recipients = self.approvers
-
-        # if extra_users:
-        #     if not isinstance(extra_users, list):
-        #         extra_users = [extra_users]
-
-        #     recipients += extra_users
-
         for user in self.approvers:
             params['channel'] = user
-            response = self._call_api(url, params=params)
-            if not response.get('ok'):
-                logger.error(f'Error notifying user {user}: {response}')
+            call_rest_api(__name__, 'get', url, params=params)
 
     def _handle_suggestions(self, match):
         splt = match[1].split(' ')
@@ -137,7 +117,7 @@ class SlumberClack(Lego):
             return 'Please provide a valid suggestions command.'
         else:
             url = self.base_url + '/' + splt[1] + '/suggestions'
-            resp = self._call_api(url)
+            resp = call_rest_api(__name__, 'get', url, response='json')
             return '```{}```'.format('\n'.join(sorted(resp)))
 
     def _handle_suggest(self, match):
@@ -149,8 +129,9 @@ class SlumberClack(Lego):
 
     def _suggest(self, path, term, user, ts=None):
         url = '/'.join([self.base_url, path, 'suggest'])
-        response = self._call_api(
-            url, params={'term': term, 'user': user, 'ts': ts})
+        response = call_rest_api(__name__, 'get', url,
+                                 params={'term': term, 'user': user, 'ts': ts},
+                                 response='json')
         msg = response.get('message', '')
         if not response.get('status'):
             logger.error(f'Bad Suggestion: {msg}')
@@ -182,7 +163,8 @@ class SlumberClack(Lego):
 
     def _approve(self, path, term, approver):
         url = '/'.join([self.base_url, path, 'approve'])
-        response = self._call_api(url, params={'term': term})
+        response = call_rest_api(__name__, 'get', url, params={'term': term},
+                                 response='json')
         msg = response.get('message', '')
         if not response.get('status'):
             logger.error(f'Bad Approval: {msg}')
@@ -196,7 +178,8 @@ class SlumberClack(Lego):
 
     def _reject(self, path, term, approver):
         url = '/'.join([self.base_url, path, 'reject'])
-        response = self._call_api(url, params={'term': term})
+        response = call_rest_api(__name__, 'get', url, params={'term': term},
+                                 response='json')
         msg = response.get('message', '')
         if not response.get('status'):
             logger.error(f'Bad Rejection: {msg}')
@@ -208,12 +191,12 @@ class SlumberClack(Lego):
 
     def _get_single(self, op):
         url = '/'.join([self.base_url, op])
-        response = self._call_api(url)
+        response = call_rest_api(__name__, 'get', url, response='json')
         return response
 
     def _get_all(self, op):
         url = '/'.join([self.base_url, op, 'all'])
-        response = self._call_api(url)
+        response = call_rest_api(__name__, 'get', url, response='json')
         if response:
             response = '```{}```'.format('\n'.join(sorted(response)))
 

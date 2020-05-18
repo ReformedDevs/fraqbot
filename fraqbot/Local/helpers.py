@@ -6,7 +6,7 @@ import yaml
 
 
 def call_rest_api(caller, method, url, payload=None, convert_payload=None,
-                  headers=None, response=None):
+                  headers=None, params=None, response=None):
     method_map = {
         'get': requests.get,
         'post': requests.post
@@ -28,6 +28,9 @@ def call_rest_api(caller, method, url, payload=None, convert_payload=None,
 
     if headers:
         request_args['headers'] = headers
+
+    if params:
+        request_args['params'] = params
 
     try:
         api_call = method_map[method](url, **request_args)
