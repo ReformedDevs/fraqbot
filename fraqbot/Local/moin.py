@@ -4,6 +4,8 @@ import logging
 from Legobot.Lego import Lego
 import requests
 
+from .helpers import call_rest_api
+
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +41,7 @@ class Moin(Lego):
 
     def _get_user_moin(self, user):
         url = f'{self.api_base}/{user}'
-        f_name = self._call_api('get', url)
+        f_name = call_rest_api(__name__, 'get', url, response='json')
         if f_name:
             return f'{self.url_base}{f_name}'
         else:
