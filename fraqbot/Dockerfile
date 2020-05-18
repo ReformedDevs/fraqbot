@@ -12,6 +12,7 @@ WORKDIR /usr/src/app
 
 # copy local stuff
 WORKDIR /usr/src/app
-COPY . .
+COPY requirements.txt ./
 RUN pip install -r ./requirements.txt
+COPY . .
 CMD python chatbot.py
