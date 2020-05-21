@@ -14,12 +14,20 @@ class SlumberClack(Lego):
         super().__init__(baseplate, lock, acl=kwargs.get('acl'))
         self.config = kwargs.get('config', {})
         self.listeners = self.config.get('listeners', {})
+        self._compile_listeners()
         self.base_url = self.config.get('clackApi', '')
         self.approvers = self.config.get('approvers', [])
         self.token = self.config.get('token', '')
         self.self = self.config.get('self', '')
         self.meta_conditions = self.config.get('metaConditions', {})
         self.matches = []
+
+    def _compile_listeners(self):
+        for k, v in self.listeners.items():
+            if v.get('insensitive') is True:
+                v['r'] = re.compile(v.get('r', r''), re.I)
+            else:
+                v['r'] = re.compile(v.get('r', r''))
 
     def listening_for(self, message):
         if message.get('metadata', {}).get('source_user', '') == self.self:
@@ -51,7 +59,7 @@ class SlumberClack(Lego):
                     self.matches.append((k, message['text'], source_user))
                     return True
 
-                match = re.search(re.compile(v.get('r', '')), message['text'])
+                match = re.search(v['r'], message['text'])
                 if match:
                     self.matches.append((
                         'match',
