@@ -64,7 +64,7 @@ class SlumberClack(Lego):
                     self.matches.append((
                         'match',
                         v.get('path', ''),
-                        match[0],
+                        match[0].strip(),
                         source_user,
                         ts
                     ))
