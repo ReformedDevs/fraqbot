@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 
 from Legobot.Lego import Lego
 import requests
@@ -9,11 +10,22 @@ logger = logging.getLogger(__name__)
 
 
 class UrbanDictionary(Lego):
+    def __init__(self, baseplate, lock, *args, **kwargs):
+        super().__init__(baseplate, lock, acl=kwargs.get('acl'))
+        self.censors = kwargs.get('censors', [])
+
     def listening_for(self, message):
         if not isinstance(message.get('text'), str):
             return False
 
         return message['text'].startswith('!ud ')
+
+    def _censor(self, text):
+        for c in self.censors:
+            fnd = re.compile(c['fnd'], re.IGNORECASE)
+            text = re.sub(fnd, c['sub'], text)
+
+        return text
 
     def _parse_response(self, response):
         text = None
@@ -21,6 +33,7 @@ class UrbanDictionary(Lego):
         if items:
             text = items[0].get('definition', '')
             text = text.replace('[', '').replace(']', '')
+            text = self._censor(text)
 
         return text if text else None
 
