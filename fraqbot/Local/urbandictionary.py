@@ -18,7 +18,10 @@ class UrbanDictionary(Lego):
         if not isinstance(message.get('text'), str):
             return False
 
-        return message['text'].startswith('!ud ')
+        return any([
+            message['text'].startswith('!ud '),
+            message['text'].startswith('/mangle ')
+        ])
 
     def _censor(self, text):
         for c in self.censors:
@@ -48,7 +51,13 @@ class UrbanDictionary(Lego):
             return None
 
     def handle(self, message):
-        term = message['text'][4:]
+        if message['text'].startswith('!ud'):
+            term = message['text'][4:]
+        elif message['text'].startswith('/mangle'):
+            term = message['text'][8:]
+        else:
+            term = ''
+
         if term:
             response = self._get_definition(term)
             if response:
