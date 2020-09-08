@@ -33,6 +33,9 @@ class UrbanDictionary(Lego):
     def _parse_response(self, response, index):
         text = None
         items = response.get('list', [])
+        if index == '%':
+            import random
+            index = random.randint(0, len(items) - 1)
         if items:
             try:
                 text = items[index].get('definition', '')
