@@ -1,12 +1,34 @@
 import json
 import logging
+import time
 
 import requests
 import yaml
 
 
+def now():
+    return int(round(time.time()))
+
+
+def load_file(path, f_type=None):
+    try:
+        with open(path) as f:
+            data = f.read()
+
+        if f_type == 'json':
+            data = json.loads(data)
+        elif f_type == 'yaml':
+            data = yaml.safe_load(data)
+
+    except Exception as e:
+        logging.error(e)
+        return None
+
+    return data
+
+
 def call_rest_api(caller, method, url, payload=None, convert_payload=None,
-                  headers=None, params=None, response=None):
+                  headers=None, params=None, response=None, default=None):
     method_map = {
         'get': requests.get,
         'post': requests.post
@@ -46,7 +68,7 @@ def call_rest_api(caller, method, url, payload=None, convert_payload=None,
 
         else:
             logging.error(f'{api_call.status_code}: {api_call.text}')
-            return None
+            return default
     except Exception as e:
         logging.error(str(e))
-        return None
+        return default
