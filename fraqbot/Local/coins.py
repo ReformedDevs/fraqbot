@@ -15,7 +15,7 @@ class Coins(Lego):
         super().__init__(baseplate, lock, acl=kwargs.get('acl'))
         self.name = kwargs.get('name', 'Coins')
         self.starting_value = kwargs.get('starting_value', 20)
-        self.trigger = kwargs.get('trigger', '!coins')
+        self.triggers = kwargs.get('triggers', ['!coins'])
         self.tx_path = os.path.join(LOCAL_DIR, 'tx.csv')
         self._init_tx_file()
         self.balance_path = os.path.join(LOCAL_DIR, 'balances.json')
@@ -23,7 +23,8 @@ class Coins(Lego):
 
     def listening_for(self, message):
         text = message.get('text')
-        return isinstance(text, str) and text.startswith(self.trigger)
+        return isinstance(text, str) and any(
+            [text.startswith(t) for t in self.triggers])
 
     def handle(self, message):
         response = None
@@ -47,8 +48,9 @@ class Coins(Lego):
 
     def get_help(self):
         lines = [f'Pay each other in {self.name}']
-        lines.append(f'To see your balance: `{self.trigger} balance`')
-        lines.append(f'To give coins: `{self.trigger} tip|pay < @person > '
+        triggers = '|'.join(self.triggers)
+        lines.append(f'To see your balance: `{triggers} balance`')
+        lines.append(f'To give coins: `{triggers} tip|pay <user> '
                      '<int> [<optional memo>]`')
         return '\n'.join(lines)
 
