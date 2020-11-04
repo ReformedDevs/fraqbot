@@ -3,6 +3,7 @@ import logging
 import os
 import time
 
+from Legobot.Connectors.Slack import Slack
 from Legobot.Lego import Lego
 
 
@@ -13,7 +14,14 @@ logger = logging.getLogger(__name__)
 class Coins(Lego):
     def __init__(self, baseplate, lock, *args, **kwargs):
         super().__init__(baseplate, lock, acl=kwargs.get('acl'))
+        children = self.baseplate._actor.children
+        if children:
+            slack = [a._actor for a in children if isinstance(a._actor, Slack)]
+            if slack:
+                self.botThread = slack[0].botThread
+
         self.name = kwargs.get('name', 'Coins')
+        self.admins = kwargs.get('admins', [])
         self.starting_value = kwargs.get('starting_value', 20)
         self.triggers = kwargs.get('triggers', ['!coins'])
         self.tx_path = os.path.join(LOCAL_DIR, 'coins_tx', 'tx.csv')
@@ -37,6 +45,8 @@ class Coins(Lego):
 
             if params[1] == 'balance':
                 response = self._format_balance(user_id, display_name)
+            if params[1] == 'balances' and user_id in self.admins:
+                response = self._get_all_balances()
             elif params[1] in ['tip', 'pay'] and len(params) >= 4:
                 response = self._process_payment(
                     user_id, display_name, params[2:])
@@ -104,6 +114,51 @@ class Coins(Lego):
             balance = self.balances[user_id]
 
         return balance
+
+    def _get_user_name(self, user_id):
+        out = user_id
+        if hasattr(self, 'botThread'):
+            out = self.botThread.get_user_name_by_id(user_id, True)
+
+        return out
+
+    def _get_all_balances(self):
+        balances = {f'@{self._get_user_name(k)}': v
+                    for k, v in self.balances.items()}
+
+        max_key = max([4] + [len(k) for k in balances.keys()])
+        max_val = max([7] + [len(str(v)) for v in balances.values()])
+        lines = []
+        line = ''
+        while len(line) < max_key + max_val + 7:
+            line += '-'
+
+        lines.append(line)
+
+        for key in ['Name'] + sorted(balances.keys()):
+            if key == 'Name':
+                val = 'Balance'
+            else:
+                val = balances[key]
+
+            l_key = f' {key}'
+            while len(l_key) < max_key + 2:
+                l_key += ' '
+
+            if key != 'Name':
+                l_key.replace(key, f'<{key}>')
+
+            val = f' {val}'
+            while len(val) < max_val + 2:
+                val += ' '
+
+            lines.append(f'|{l_key}|{val}|')
+            if key == 'Name':
+                lines.append(lines[0])
+
+        lines.append(lines[0])
+
+        return '```{}```'.format('\n'.join(lines))
 
     def _format_balance(self, user_id, display_name):
         balance = self._get_balance(user_id)
