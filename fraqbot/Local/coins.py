@@ -138,7 +138,7 @@ class Coins(Lego):
         payee = payee.replace('<', '').replace('@', '').replace('>', '')
         out = {'ok': False}
         if payer == payee:
-            out['msg'] = '@payer, you can\' pay yourself.'
+            out['msg'] = f'@{payer}, you can\'t pay yourself.'
             return out
 
         payer_balance = self._get_balance(payer)
