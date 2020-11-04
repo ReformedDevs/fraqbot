@@ -16,9 +16,11 @@ class Coins(Lego):
         self.name = kwargs.get('name', 'Coins')
         self.starting_value = kwargs.get('starting_value', 20)
         self.triggers = kwargs.get('triggers', ['!coins'])
-        self.tx_path = os.path.join(LOCAL_DIR, 'tx.csv')
+        self.tx_path = os.path.join(LOCAL_DIR, 'coins_tx', 'tx.csv')
+        self.history_path = os.path.join(LOCAL_DIR, 'coins_tx', 'history.log')
         self._init_tx_file()
-        self.balance_path = os.path.join(LOCAL_DIR, 'balances.json')
+        self.balance_path = os.path.join(
+            LOCAL_DIR, 'coins_tx', 'balances.json')
         self._load_balances()
 
     def listening_for(self, message):
@@ -40,6 +42,7 @@ class Coins(Lego):
                     user_id, display_name, params[2:])
 
         if response:
+            self._write_history(message, response)
             opts = self.build_reply_opts(message)
             self.reply(message, response, opts)
 
@@ -68,6 +71,13 @@ class Coins(Lego):
             line = f'\n{line}'
 
         with open(self.tx_path, 'a') as f:
+            f.write(line)
+
+    def _write_history(self, message, response):
+        line = json.dumps(
+            {'message': message, 'response': response}, sort_keys=True) + '\n'
+
+        with open(self.history_path, 'a') as f:
             f.write(line)
 
     def _load_balances(self):
@@ -127,6 +137,10 @@ class Coins(Lego):
     def _pay(self, payer, payee, amount, memo=None):
         payee = payee.replace('<', '').replace('@', '').replace('>', '')
         out = {'ok': False}
+        if payer == payee:
+            out['msg'] = '@payer, you can\' pay yourself.'
+            return out
+
         payer_balance = self._get_balance(payer)
         if payer_balance < amount:
             out['msg'] = f'You don\'t have enough {self.name}'
