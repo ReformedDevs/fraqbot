@@ -43,11 +43,13 @@ class Coins(Lego):
             user_id = message.get('metadata', {}).get('source_user')
             display_name = message.get('metadata', {}).get('display_name')
 
-            if params[1] == 'balance':
+            if params[1].lower() == 'help':
+                response = self.get_help()
+            elif params[1].lower() == 'balance':
                 response = self._format_balance(user_id, display_name)
-            if params[1] == 'balances' and user_id in self.admins:
+            elif params[1].lower() == 'balances' and user_id in self.admins:
                 response = self._get_all_balances()
-            elif params[1] in ['tip', 'pay'] and len(params) >= 4:
+            elif params[1].lower() in ['tip', 'pay'] and len(params) >= 4:
                 response = self._process_payment(
                     user_id, display_name, params[2:])
 
