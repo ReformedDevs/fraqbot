@@ -1,6 +1,8 @@
+from copy import copy
 import json
 import logging
 import os
+import re
 import time
 
 from Legobot.Connectors.Slack import Slack
@@ -39,14 +41,14 @@ class Coins(Lego):
     def handle(self, message):
         response = None
         params = message.get('metadata', {}).get('text').split(' ')
+        user_id = message.get('metadata', {}).get('source_user')
         if len(params) > 1:
-            user_id = message.get('metadata', {}).get('source_user')
             display_name = message.get('metadata', {}).get('display_name')
 
             if params[1].lower() == 'help':
                 response = self.get_help()
             elif params[1].lower() == 'balance':
-                response = self._format_balance(user_id, display_name)
+                response = self._format_balance(user_id)
             elif params[1].lower() == 'balances' and user_id in self.admins:
                 response = self._get_all_balances()
             elif params[1].lower() in ['tip', 'pay'] and len(params) >= 4:
@@ -125,11 +127,10 @@ class Coins(Lego):
         return out
 
     def _get_all_balances(self):
-        balances = {f'@{self._get_user_name(k)}': v
-                    for k, v in self.balances.items()}
-
-        max_key = max([4] + [len(k) for k in balances.keys()])
-        max_val = max([7] + [len(str(v)) for v in balances.values()])
+        bal = copy(self.balances)
+        name_map = {k: f'@{self._get_user_name(k)}' for k in bal.keys()}
+        max_key = max([4] + [len(name_map[k]) for k in bal.keys()])
+        max_val = max([7] + [len(str(v)) for v in bal.values()])
         lines = []
         line = ''
         while len(line) < max_key + max_val + 7:
@@ -137,18 +138,19 @@ class Coins(Lego):
 
         lines.append(line)
 
-        for key in ['Name'] + sorted(balances.keys()):
+        for key in ['Name'] + sorted(bal.keys(), key=lambda k: name_map[k]):
             if key == 'Name':
+                l_key = ' Name'
                 val = 'Balance'
             else:
-                val = balances[key]
+                l_key = ' {}'.format(name_map[key])
+                val = bal[key]
 
-            l_key = f' {key}'
             while len(l_key) < max_key + 2:
                 l_key += ' '
 
             if key != 'Name':
-                l_key.replace(key, f'<{key}>')
+                l_key = re.sub(r'@.*[^\s](?=\s*$)', f'<@{key}>', l_key)
 
             val = f' {val}'
             while len(val) < max_val + 2:
@@ -162,10 +164,10 @@ class Coins(Lego):
 
         return '```{}```'.format('\n'.join(lines))
 
-    def _format_balance(self, user_id, display_name):
+    def _format_balance(self, user_id):
         balance = self._get_balance(user_id)
-        return '@{} has {} {}'.format(
-            display_name, balance, self.name)
+        return '<@{}> has {} {}'.format(
+            user_id, balance, self.name)
 
     def _process_payment(self, payer, payer_display_name, params):
         payee = params[0]
@@ -186,7 +188,7 @@ class Coins(Lego):
         paid = self._pay(payer, payee, amount, memo)
 
         if paid['ok'] is True:
-            return (f'@{payer_display_name} successfully sent {amount} '
+            return (f'<@{payer}> successfully sent {amount} '
                     f'{self.name} to {payee}.')
         else:
             return paid.get('msg')
