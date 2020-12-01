@@ -76,7 +76,11 @@ class AOC(Lego):
         leaderboard = self._get_leaderboard()
         logger.debug('LEADERBOARD: {}'.format(leaderboard))
         if leaderboard:
-            leaderboard = leaderboard.get('members')
+            leaderboard = {
+                k: v for k, v in leaderboard.get('members', {}).items()
+                if v.get('stars', 0) > 0
+            }
+            # leaderboard.get('members')
             leaderboard = self._calculate_suplemental_values(leaderboard)
             leaders = sorted(
                         [{'name': value['name'],
@@ -127,7 +131,8 @@ class AOC(Lego):
             {'stars': x['stars'], 'score': x['local_score']}
             for k, x in leaderboard.items()
             if x['name'] == 'sircharleswatson'
-        ][0]
+        ]
+        chuck = chuck[0] if chuck else {'score': 0, 'stars': 0}
         for k, v in leaderboard.items():
             v['crank'] = self._calculate_chuck_rank(
                 v['local_score'],
