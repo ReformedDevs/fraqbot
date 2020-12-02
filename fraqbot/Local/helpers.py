@@ -72,3 +72,52 @@ def call_rest_api(caller, method, url, payload=None, convert_payload=None,
     except Exception as e:
         logging.error(str(e))
         return default
+
+
+def format_table(data, fields=None, margin=None, sep=None, border=None):
+    if not fields or not isinstance(fields, list):
+        field_order = sorted(data[0].keys())
+        fields = {f: {} for f in field_order}
+    else:
+        field_order = [f['field'] for f in fields]
+        fields = {f['field']: f for f in fields}
+
+    data.insert(0, {
+        f: fields.get(f, {}).get('display', f)
+        for f in field_order
+    })
+
+    for f, info in fields.items():
+        info['max'] = max(len(str(d.get(f, ''))) for d in data)
+
+    margin = margin if margin and isinstance(margin, int) else 0
+    sep = sep if sep and isinstance(sep, str) else ''
+    border = border if border and isinstance(border, str) else ''
+
+    lines = []
+    for d in data:
+        line = []
+        for f in field_order:
+            item = str(d.get(f, ''))
+            while len(item) < fields[f]['max']:
+                item = f'{item} '
+
+            for _ in range(margin):
+                item = f' {item} '
+
+            line.append(item)
+
+        line = f'{border}{sep.join(line)}{border}'
+
+        lines.append(line)
+
+    if border:
+        border_line = ''
+        for _ in range(len(lines[0])):
+            border_line = f'{border_line}{border}'
+
+        lines.insert(0, border_line)
+        lines.insert(2, border_line)
+        lines.append(border_line)
+
+    return '\n'.join(lines)
