@@ -7,7 +7,7 @@ legos.codinglove
 # legos.dice
 legos.ctftime
 legos.fact_sphere==0.2.2
-legos.memes>=0.3.6
+legos.memes>=0.3.7
 legos.apod==0.1.1
 #legos.markov
 #redis==2.10.6
