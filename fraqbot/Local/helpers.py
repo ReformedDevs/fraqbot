@@ -27,6 +27,22 @@ def load_file(path, f_type=None):
     return data
 
 
+def write_file(path, data, f_type=None):
+    try:
+        with open(path, 'w') as f:
+            if f_type == 'json':
+                json.dump(data, f, indent=2, sort_keys=True)
+            elif f_type == 'yaml':
+                yaml.safe_dump(data, f, sort_keys=True)
+            else:
+                f.write(data)
+
+        return True
+    except Exception as e:
+        logging.error(e)
+        return None
+
+
 def call_rest_api(caller, method, url, payload=None, convert_payload=None,
                   headers=None, params=None, response=None, default=None):
     method_map = {

@@ -2,7 +2,10 @@ from copy import copy
 import json
 import logging
 import os
+from random import choice
+from random import randint
 import re
+import sys
 import time
 
 from Legobot.Connectors.Slack import Slack
@@ -11,6 +14,12 @@ from Legobot.Lego import Lego
 
 LOCAL_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)))
 logger = logging.getLogger(__name__)
+DAY = 86400
+CHOICES = [False, True, False, True, False]
+
+sys.path.append(LOCAL_DIR)
+
+import helpers as h  # noqa E402
 
 
 class Coins(Lego):
@@ -32,33 +41,54 @@ class Coins(Lego):
         self.balance_path = os.path.join(
             LOCAL_DIR, 'coins_tx', 'balances.json')
         self._load_balances()
+        self._update_pool()
+        self.moiners = []
+        self.moined = []
 
     def listening_for(self, message):
+        _handle = False
         text = message.get('text')
-        return isinstance(text, str) and any(
-            [text.startswith(t) for t in self.triggers])
+        if isinstance(text, str):
+            self._check_pool_ts(message)
+            if any([text.startswith(t) for t in self.triggers]):
+                _handle = True
+            elif 'moin' in text.lower():
+                moiner = message.get('metadata', {}).get('source_user')
+                if moiner and moiner not in self.moined and choice(CHOICES):
+                    self.moiners.append(moiner)
+                    _handle = True
+
+        return _handle
 
     def handle(self, message):
-        response = None
-        params = message.get('metadata', {}).get('text').split(' ')
-        user_id = message.get('metadata', {}).get('source_user')
-        if len(params) > 1:
-            display_name = message.get('metadata', {}).get('display_name')
+        if self.moiners:
+            while self.moiners:
+                moiner = self.moiners.pop(0)
+                self._process_moin(moiner, message)
+        else:
+            response = None
+            params = message.get('metadata', {}).get('text').split(' ')
+            user_id = message.get('metadata', {}).get('source_user')
+            if len(params) > 1:
+                display_name = message.get('metadata', {}).get('display_name')
 
-            if params[1].lower() == 'help':
-                response = self.get_help()
-            elif params[1].lower() == 'balance':
-                response = self._format_balance(user_id)
-            elif params[1].lower() == 'balances' and user_id in self.admins:
-                response = self._get_all_balances()
-            elif params[1].lower() in ['tip', 'pay'] and len(params) >= 4:
-                response = self._process_payment(
-                    user_id, display_name, params[2:])
+                if params[1].lower() == 'help':
+                    response = self.get_help()
+                elif params[1].lower() == 'balance':
+                    response = self._format_balance(user_id)
+                elif (
+                    params[1].lower() == 'balances'
+                    and user_id in self.admins
+                ):
+                    response = self._get_all_balances()
+                elif params[1].lower() in ['tip', 'pay'] and len(params) >= 4:
+                    response = self._process_payment(
+                        user_id, display_name, params[2:])
 
-        if response:
-            self._write_history(message, response)
-            opts = self.build_reply_opts(message)
-            self.reply(message, response, opts)
+            if response:
+                self._write_history(message, response)
+                opts = self.build_reply_opts(message)
+                self.reply(message, response, opts)
 
     def get_name(self):
         return self.name
@@ -70,6 +100,40 @@ class Coins(Lego):
         lines.append(f'To give coins: `{triggers} tip|pay <user> '
                      '<int> [<optional memo>]`')
         return '\n'.join(lines)
+
+    def _process_moin(self, moiner, message):
+        pool_balance = self._get_balance('pool')
+        divvy = pool_balance // 7
+        if pool_balance and divvy:
+            amt = randint(1, divvy) * 7
+            pay = self._pay('pool', moiner, amt, 'Happy Moin!')
+            if pay.get('ok'):
+                msg = (f'<@{moiner}> received {amt} {self.name} from the '
+                       'Pool. Happy Moin!')
+                opts = self.build_reply_opts(message)
+                self.reply(message, msg, opts)
+                self.moined.append(moiner)
+
+    def _check_pool_ts(self, message):
+        if not hasattr(self, 'update_pool_ts'):
+            self._update_pool()
+        else:
+            msg_ts = float(message.get('metadata', {}).get('ts', 0))
+            if msg_ts - self.update_pool_ts > DAY:
+                self._update_pool()
+
+    def _update_pool(self):
+        _now = h.now()
+        if (
+            not hasattr(self, 'update_pool_ts')
+            or _now - self.update_pool_ts > DAY
+        ):
+            self.update_pool_ts = _now
+            amt = randint(5, 25) * 10
+            pool_balance = self._get_balance('pool')
+            self._update_balance('pool', pool_balance + amt)
+            self._write_tx(None, 'pool', amt, 'daily pool deposit', _now)
+            self.moined = []
 
     def _init_tx_file(self):
         if not os.path.isfile(self.tx_path):
