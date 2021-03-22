@@ -42,6 +42,7 @@ class Coins(Lego):
             LOCAL_DIR, 'coins_tx', 'balances.json')
         self._load_balances()
         self._update_pool()
+        self.pool_excludes = kwargs.get('pool_excludes', [])
         self.moiners = []
         self.moined = []
 
@@ -54,7 +55,12 @@ class Coins(Lego):
                 _handle = True
             elif 'moin' in text.lower():
                 moiner = message.get('metadata', {}).get('source_user')
-                if moiner and moiner not in self.moined and choice(CHOICES):
+                if (
+                    moiner
+                    and moiner not in self.moined
+                    and moiner not in self.pool_excludes
+                    and choice(CHOICES)
+                ):
                     self.moiners.append(moiner)
                     _handle = True
 
