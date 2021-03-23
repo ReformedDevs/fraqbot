@@ -14,7 +14,6 @@ from Legobot.Lego import Lego
 
 LOCAL_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)))
 logger = logging.getLogger(__name__)
-DAY = 86400
 CHOICES = [False, True, False, True]
 
 sys.path.append(LOCAL_DIR)
@@ -41,7 +40,7 @@ class Coins(Lego):
         self.balance_path = os.path.join(
             LOCAL_DIR, 'coins_tx', 'balances.json')
         self._load_balances()
-        self.next_pool = h.now() + DAY
+        self.next_pool = 0
         self._update_pool()
         self.pool_excludes = kwargs.get('pool_excludes', [])
         self.moiners = []
@@ -148,7 +147,7 @@ class Coins(Lego):
             self._update_pool()
         else:
             msg_ts = float(message.get('metadata', {}).get('ts', 0))
-            if msg_ts - self.update_pool_ts > DAY:
+            if msg_ts > self.next_pool:
                 self._update_pool()
 
     def _update_pool(self):
@@ -158,7 +157,7 @@ class Coins(Lego):
             or _now > self.next_pool
         ):
             self.update_pool_ts = _now
-            self.next_pool = _now + DAY
+            self.next_pool = _now + (randint(12, 21) * 3600)
             amt = randint(10, 75) * 10
             pool_balance = self._get_balance('pool')
             self._update_balance('pool', pool_balance + amt)
