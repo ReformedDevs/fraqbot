@@ -41,6 +41,7 @@ class Coins(Lego):
         self.balance_path = os.path.join(
             LOCAL_DIR, 'coins_tx', 'balances.json')
         self._load_balances()
+        self.next_pool = h.now() + DAY
         self._update_pool()
         self.pool_excludes = kwargs.get('pool_excludes', [])
         self.moiners = []
@@ -80,6 +81,9 @@ class Coins(Lego):
 
                 if params[1].lower() == 'help':
                     response = self.get_help()
+                elif params[1].lower() == 'pool':
+                    response = self._format_balance('pool')
+                    response += f'\nNext fill up in: {self._next_fill_up()}'
                 elif params[1].lower() == 'balance':
                     response = self._format_balance(user_id)
                 elif (
@@ -92,6 +96,7 @@ class Coins(Lego):
                         user_id, display_name, params[2:])
 
             if response:
+                response = response.replace('<@pool>', 'The Pool')
                 self._write_history(message, response)
                 opts = self.build_reply_opts(message)
                 self.reply(message, response, opts)
@@ -105,6 +110,8 @@ class Coins(Lego):
         lines.append(f'To see your balance: `{triggers} balance`')
         lines.append(f'To give coins: `{triggers} tip|pay <user> '
                      '<int> [<optional memo>]`')
+        lines.append(f'To see the pool balance: `{triggers} pool`')
+
         return '\n'.join(lines)
 
     def _process_moin(self, moiner, message):
@@ -132,14 +139,30 @@ class Coins(Lego):
         _now = h.now()
         if (
             not hasattr(self, 'update_pool_ts')
-            or _now - self.update_pool_ts > DAY
+            or _now > self.next_pool
         ):
             self.update_pool_ts = _now
+            self.next_pool = _now + DAY
             amt = randint(5, 25) * 10
             pool_balance = self._get_balance('pool')
             self._update_balance('pool', pool_balance + amt)
             self._write_tx(None, 'pool', amt, 'daily pool deposit', _now)
             self.moined = []
+
+    def _next_fill_up(self):
+        out = []
+        _now = h.now()
+        diff = self.next_pool - _now
+        hours = diff // 3600
+        if hours:
+            out.append(f'{hours} Hours')
+        
+        remain = diff % 3600
+        minutes = remain // 60
+        if minutes:
+            out.append(f'{minutes} Minutes')
+
+        return ', '.join(out)
 
     def _init_tx_file(self):
         if not os.path.isfile(self.tx_path):
