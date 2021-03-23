@@ -15,7 +15,7 @@ from Legobot.Lego import Lego
 LOCAL_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)))
 logger = logging.getLogger(__name__)
 DAY = 86400
-CHOICES = [False, True, False, True, False]
+CHOICES = [False, True, False, True]
 
 sys.path.append(LOCAL_DIR)
 
@@ -60,7 +60,6 @@ class Coins(Lego):
                     moiner
                     and moiner not in self.moined
                     and moiner not in self.pool_excludes
-                    and choice(CHOICES)
                 ):
                     self.moiners.append(moiner)
                     _handle = True
@@ -115,17 +114,34 @@ class Coins(Lego):
         return '\n'.join(lines)
 
     def _process_moin(self, moiner, message):
+        self.moined.append(moiner)
+        if not choice(CHOICES):
+            return None
+
         pool_balance = self._get_balance('pool')
-        divvy = pool_balance // 7
-        if pool_balance and divvy:
-            amt = randint(1, divvy) * 7
+        opts = []
+        if pool_balance >= 14:
+            opts.append(7)
+        if pool_balance >= 22:
+            opts.append(11)
+        if pool_balance >= 26:
+            opts.append(13)
+        if pool_balance >= 34:
+            opts.append(17)
+
+        divvy = None
+        if opts:
+            divisor = choice(opts)
+            divvy = pool_balance // divisor
+
+        if opts and pool_balance and divvy:
+            amt = randint(2, divvy) * divisor
             pay = self._pay('pool', moiner, amt, 'Happy Moin!')
             if pay.get('ok'):
                 msg = (f'<@{moiner}> received {amt} {self.name} from the '
                        'Pool. Happy Moin!')
                 opts = self.build_reply_opts(message)
                 self.reply(message, msg, opts)
-                self.moined.append(moiner)
 
     def _check_pool_ts(self, message):
         if not hasattr(self, 'update_pool_ts'):
@@ -143,7 +159,7 @@ class Coins(Lego):
         ):
             self.update_pool_ts = _now
             self.next_pool = _now + DAY
-            amt = randint(5, 25) * 10
+            amt = randint(10, 75) * 10
             pool_balance = self._get_balance('pool')
             self._update_balance('pool', pool_balance + amt)
             self._write_tx(None, 'pool', amt, 'daily pool deposit', _now)
