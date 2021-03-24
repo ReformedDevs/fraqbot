@@ -134,6 +134,7 @@ class Coins(Lego):
             divvy = pool_balance // divisor
 
         if opts and pool_balance and divvy:
+            divvy = divvy // 2 + 1 if divvy >= 3 else 2
             amt = randint(2, divvy) * divisor
             pay = self._pay('pool', moiner, amt, 'Happy Moin!')
             if pay.get('ok'):
@@ -157,8 +158,8 @@ class Coins(Lego):
             or _now > self.next_pool
         ):
             self.update_pool_ts = _now
-            self.next_pool = _now + (randint(12, 21) * 3600)
-            amt = randint(10, 75) * 10
+            self.next_pool = _now + (randint(8, 18) * 3600)
+            amt = randint(25, 75) * 10
             pool_balance = self._get_balance('pool')
             self._update_balance('pool', pool_balance + amt)
             self._write_tx(None, 'pool', amt, 'daily pool deposit', _now)
