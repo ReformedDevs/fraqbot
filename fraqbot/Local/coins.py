@@ -8,6 +8,8 @@ import re
 import sys
 import time
 
+from tabulate import tabulate
+
 from Legobot.Connectors.Slack import Slack
 from Legobot.Lego import Lego
 
@@ -236,42 +238,25 @@ class Coins(Lego):
         return out
 
     def _get_all_balances(self):
-        bal = copy(self.balances)
-        name_map = {k: f'@{self._get_user_name(k)}' for k in bal.keys()}
-        max_key = max([4] + [len(name_map[k]) for k in bal.keys()])
-        max_val = max([7] + [len(str(v)) for v in bal.values()])
-        lines = []
-        line = ''
-        while len(line) < max_key + max_val + 7:
-            line += '-'
+        balances = []
+        for uid, bal in self.balances.items():
+            name = self._get_user_name(uid)
+            if name:
+                balances.append((uid, name, bal))
 
-        lines.append(line)
-
-        for key in ['Name'] + sorted(bal.keys(), key=lambda k: name_map[k]):
-            if key == 'Name':
-                l_key = ' Name'
-                val = 'Balance'
-            else:
-                l_key = ' {}'.format(name_map[key])
-                val = bal[key]
-
-            while len(l_key) < max_key + 2:
-                l_key += ' '
-
-            if key != 'Name':
-                l_key = re.sub(r'@.*[^\s](?=\s*$)', f'<@{key}>', l_key)
-
-            val = f' {val}'
-            while len(val) < max_val + 2:
-                val += ' '
-
-            lines.append(f'|{l_key}|{val}|')
-            if key == 'Name':
-                lines.append(lines[0])
-
-        lines.append(lines[0])
-
-        return '```{}```'.format('\n'.join(lines))
+        table_data = [('Name', 'Balance')] + [
+            ('@{}'.format(b[1]), b[2])
+            for b in sorted(balances, key=lambda k: k[2])
+        ]
+        out = tabulate(
+            table_data,
+            headers='firstrow',
+            tablefmt='github'
+        )
+        for b in balances:
+            out = out.replace('@{} '.format(b[1]), '<@{}> '.format(b[0]))
+        
+        return f'```{out}```'
 
     def _format_balance(self, user_id):
         balance = self._get_balance(user_id)
