@@ -14,3 +14,4 @@ legos.apod==0.1.1
 #markovify
 #nltk
 pyyaml
+tabulate==0.8.9
