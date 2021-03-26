@@ -1,0 +1,4 @@
+[bandit]
+targets: fraqbot/*.py,frabot/Local/*.py
+# Skips warning about about using random for cryptography (which we are not using it for.)
+skips: B311

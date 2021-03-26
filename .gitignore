@@ -12,3 +12,4 @@ venv/*
 .cache
 .pytest_cache
 .python-version
+coins_tx

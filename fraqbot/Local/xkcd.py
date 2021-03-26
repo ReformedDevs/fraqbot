@@ -1,8 +1,10 @@
-from Legobot.Lego import Lego
-import requests
-import logging
 import json
+import logging
 import random
+
+import requests
+
+from Legobot.Lego import Lego
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +20,7 @@ class XKCD(Lego):
         if url:
             logger.info('Retrieving URL: {}'.format(url))
             text, attachment = self._get_comic(url)
-            
+
             if text:
                 opts = self.build_reply_opts(message)
                 if attachment:
