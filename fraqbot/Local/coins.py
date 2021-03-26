@@ -90,7 +90,9 @@ class Coins(Lego):
                     params[1].lower() == 'balances'
                     and user_id in self.admins
                 ):
-                    response = self._get_balances_formatted_table()
+                    response = self._format_balances_table(
+                        self._get_all_balances_data()
+                    )
                 elif params[1].lower() in ['tip', 'pay'] and len(params) >= 4:
                     response = self._process_payment(
                         user_id, display_name, params[2:])
@@ -237,7 +239,7 @@ class Coins(Lego):
 
         return out
 
-    def _get_all_balances(self):
+    def _get_all_balances_data(self):
         balances = []
         for uid, bal in self.balances.items():
             name = self._get_user_name(uid)
@@ -248,9 +250,9 @@ class Coins(Lego):
             ('@{}'.format(b[1]), b[2])
             for b in sorted(balances, key=lambda k: k[2])
         ]
-        return this._get_balances_formatted_table(table_data)
+        return table_data
 
-    def _get_balances_formatted_table(self, table_data):
+    def _format_balances_table(self, table_data):
         out = tabulate(
             table_data,
             headers='firstrow',
@@ -262,7 +264,7 @@ class Coins(Lego):
         return f'```{out}```'
 
     def _get_user_rank(self, user_id):
-        table_data = self._get_all_balances(true)
+        table_data = self._get_all_balances_data(true)
         rank = '?'
         user_name = self._get_user_name(user_id)
         for i, item in enumerate(table_data):
