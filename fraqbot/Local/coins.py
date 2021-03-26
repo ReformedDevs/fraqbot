@@ -259,16 +259,24 @@ class Coins(Lego):
         return f'```{out}```'
 
     def _get_rank(self, user_id):
-        balances = []
+        skipped_bals = []
+        user_bal = None
+        user_rank = 1
         for uid, bal in self.balances.items():
-            if uid:
-                balances.append((uid, bal))
-        sorted_balances = sorted(balances, key=lambda k: k[1], reverse=True)
-        rank = "?"
-        for i, item in enumerate(sorted_balances):
-            if item[0] == user_id:
-                rank = ('{}'.format(i + 1))
-        return rank
+            if uid == user_id:
+                user_bal = bal
+            if user_bal:
+                if user_bal < bal:
+                    user_rank+=1
+            else:
+                skipped_bals.append(bal)
+        if user_bal:
+            for bal in skipped_bals:
+                if user_bal < bal:
+                    user_rank+=1
+        else:
+            user_bal = "?"
+        return user_rank
 
     def _format_balance(self, user_id):
         balance = self._get_balance(user_id)
