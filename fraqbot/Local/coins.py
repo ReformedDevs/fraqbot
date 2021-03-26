@@ -107,7 +107,7 @@ class Coins(Lego):
     def get_help(self):
         lines = [f'Pay each other in {self.name}']
         triggers = '|'.join(self.triggers)
-        lines.append(f'To see your balance: `{triggers} balance`')
+        lines.append(f'To see your balance and rank: `{triggers} balance`')
         lines.append(f'To give coins: `{triggers} tip|pay <user> '
                      '<int> [<optional memo>]`')
         lines.append(f'To see the pool balance: `{triggers} pool`')
@@ -258,10 +258,23 @@ class Coins(Lego):
         
         return f'```{out}```'
 
+    def _get_rank(self, user_id):
+        balances = []
+        for uid, bal in self.balances.items():
+            if (uid):
+                balances.append((uid, bal))
+        sorted_balances = sorted(balances, key=lambda k: k[1], reverse=True)
+        rank = "?"
+        for i, item in enumerate(sorted_balances):
+            if item[0] == user_id:
+                rank = ('{}'.format(i))
+        return rank
+
     def _format_balance(self, user_id):
         balance = self._get_balance(user_id)
-        return '<@{}> has {} {}'.format(
-            user_id, balance, self.name)
+        rank = self._get_user_rank(user_id)
+        return '<@{}> has {} {} and is ranked # {}'.format(
+            user_id, balance, self.name, rank)
 
     def _process_payment(self, payer, payer_display_name, params):
         payee = params[0]
