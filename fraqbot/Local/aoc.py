@@ -4,6 +4,7 @@ import os
 import sys
 
 import jmespath
+
 from Legobot.Connectors.Slack import Slack
 from Legobot.Lego import Lego
 
