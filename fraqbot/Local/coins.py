@@ -268,8 +268,9 @@ class Coins(Lego):
         table_data = self._get_all_balances_data()[1]
         rank = '?'
         user_name = self._get_user_name(user_id)
+        user_name_prepended = '@{}'.format(user_name)
         for i, item in enumerate(table_data):
-            if item[0] == user_name:
+            if item[0] == user_name_prepended:
                 rank = ('{}'.format(i))
         return rank
 
