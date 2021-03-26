@@ -90,7 +90,7 @@ class Coins(Lego):
                     params[1].lower() == 'balances'
                     and user_id in self.admins
                 ):
-                    response = self._get_all_balances()
+                    response = self._get_balances_formatted_table()
                 elif params[1].lower() in ['tip', 'pay'] and len(params) >= 4:
                     response = self._process_payment(
                         user_id, display_name, params[2:])
@@ -107,7 +107,7 @@ class Coins(Lego):
     def get_help(self):
         lines = [f'Pay each other in {self.name}']
         triggers = '|'.join(self.triggers)
-        lines.append(f'To see your balance: `{triggers} balance`')
+        lines.append(f'To see your balance and rank: `{triggers} balance`')
         lines.append(f'To give coins: `{triggers} tip|pay <user> '
                      '<int> [<optional memo>]`')
         lines.append(f'To see the pool balance: `{triggers} pool`')
@@ -248,6 +248,9 @@ class Coins(Lego):
             ('@{}'.format(b[1]), b[2])
             for b in sorted(balances, key=lambda k: k[2])
         ]
+        return this._get_balances_formatted_table(table_data)
+
+    def _get_balances_formatted_table(self, table_data):
         out = tabulate(
             table_data,
             headers='firstrow',
@@ -258,10 +261,20 @@ class Coins(Lego):
         
         return f'```{out}```'
 
+    def _get_user_rank(self, user_id):
+        table_data = self._get_all_balances(true)
+        rank = '?'
+        user_name = self._get_user_name(user_id)
+        for i, item in enumerate(table_data):
+            if item[0] == user_name:
+                rank = ('{}'.format(i))
+        return rank
+
     def _format_balance(self, user_id):
         balance = self._get_balance(user_id)
-        return '<@{}> has {} {}'.format(
-            user_id, balance, self.name)
+        rank = self._get_user_rank(user_id)
+        return '<@{}> has {} {} and is ranked # {}'.format(
+            user_id, balance, self.name, rank)
 
     def _process_payment(self, payer, payer_display_name, params):
         payee = params[0]
