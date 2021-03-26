@@ -272,7 +272,7 @@ class Coins(Lego):
 
     def _format_balance(self, user_id):
         balance = self._get_balance(user_id)
-        rank = self._get_user_rank(user_id)
+        rank = self._get_rank(user_id)
         return '<@{}> has {} {} and is ranked # {}'.format(
             user_id, balance, self.name, rank)
 
