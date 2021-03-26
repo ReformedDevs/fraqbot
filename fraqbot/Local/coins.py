@@ -267,7 +267,7 @@ class Coins(Lego):
         rank = "?"
         for i, item in enumerate(sorted_balances):
             if item[0] == user_id:
-                rank = ('{}'.format(i))
+                rank = ('{}'.format(i + 1))
         return rank
 
     def _format_balance(self, user_id):
