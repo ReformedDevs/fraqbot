@@ -261,7 +261,7 @@ class Coins(Lego):
     def _get_rank(self, user_id):
         balances = []
         for uid, bal in self.balances.items():
-            if (uid):
+            if uid:
                 balances.append((uid, bal))
         sorted_balances = sorted(balances, key=lambda k: k[1], reverse=True)
         rank = "?"
