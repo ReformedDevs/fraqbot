@@ -80,10 +80,12 @@ def test_obj_to_pretext():
             'C': 'Val C'
         }
     ]
-    correct = """  A Field  |  B Field  |    C     
-----------------------------------
- Value A 1 |  Val b 1  | Value C1 
- Val a2    | Value B 1 |    Val C """
+    correct = '\n'.join([
+        '  A Field  |  B Field  |    C     ',
+        '----------------------------------',
+        ' Value A 1 |  Val b 1  | Value C1 ',
+        ' Val a2    | Value B 1 |    Val C '
+    ])
 
     assert LEGO._obj_to_pretext(obj) == correct
 

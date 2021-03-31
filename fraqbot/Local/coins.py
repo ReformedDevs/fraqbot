@@ -1,10 +1,8 @@
-from copy import copy
 import json
 import logging
 import os
 from random import choice
 from random import randint
-import re
 import sys
 import time
 
@@ -174,7 +172,7 @@ class Coins(Lego):
         hours = diff // 3600
         if hours:
             out.append(f'{hours} Hours')
-        
+
         remain = diff % 3600
         minutes = remain // 60
         if minutes:
@@ -255,7 +253,7 @@ class Coins(Lego):
         )
         for b in balances:
             out = out.replace('@{} '.format(b[1]), '<@{}> '.format(b[0]))
-        
+
         return f'```{out}```'
 
     def _format_balance(self, user_id):
