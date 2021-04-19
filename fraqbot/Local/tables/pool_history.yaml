@@ -1,0 +1,17 @@
+pool_history:
+  - name: id
+    type: int
+    kwargs:
+      primary_key: true
+  - name: fillup_ts
+    type: int
+    kwargs:
+      nullable: false
+  - name: next_fillup_ts
+    type: int
+    kwargs:
+      nullable: false
+  - name: amount
+    type: int
+    kwargs:
+      nullable: false

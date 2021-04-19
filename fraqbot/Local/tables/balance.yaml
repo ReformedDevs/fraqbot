@@ -1,0 +1,11 @@
+balance:
+  - name: user
+    type: string
+    type_args:
+      - 25
+    kwargs:
+      primary_key: true
+  - name: balance
+    type: int
+    kwargs:
+      nullable: false

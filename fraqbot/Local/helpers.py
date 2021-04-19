@@ -1,27 +1,50 @@
+import csv
 import json
 import logging
+import os
+import re
 import time
 
+import jmespath
+from jmespath import functions
+from jsonschema import validate
 import requests
 import yaml
+
+
+LOGGER = logging.getLogger('helpers')
 
 
 def now():
     return int(round(time.time()))
 
 
-def load_file(path, f_type=None):
+def load_file(path, f_type=None, raw=None, delimiter=None):
+    if not f_type:
+        if path.endswith('.json'):
+            f_type = 'json'
+        elif path.endswith('.yaml'):
+            f_type = 'yaml'
+        elif path.endswith('.csv'):
+            f_type = 'csv'
+
     try:
         with open(path) as f:
             data = f.read()
 
-        if f_type == 'json':
-            data = json.loads(data)
-        elif f_type == 'yaml':
-            data = yaml.safe_load(data)
+        if raw is not True:
+            if f_type == 'json':
+                data = json.loads(data)
+            elif f_type == 'yaml':
+                data = yaml.safe_load(data)
+            elif f_type == 'csv':
+                data = [
+                    row for row in
+                    csv.DictReader(data.splitlines(), delimiter=delimiter)
+                ]
 
     except Exception as e:
-        logging.error(e)
+        LOGGER.error(e)
         return None
 
     return data
@@ -39,7 +62,7 @@ def write_file(path, data, f_type=None):
 
         return True
     except Exception as e:
-        logging.error(e)
+        LOGGER.error(e)
         return None
 
 
@@ -51,7 +74,7 @@ def call_rest_api(caller, method, url, payload=None, convert_payload=None,
     }
 
     if method not in method_map:
-        logging.error(f'Invalid method from {caller} to {url}:\n{method}')
+        LOGGER.error(f'Invalid method from {caller} to {url}:\n{method}')
         return None
 
     request_args = {}
@@ -83,10 +106,10 @@ def call_rest_api(caller, method, url, payload=None, convert_payload=None,
             return res
 
         else:
-            logging.error(f'{api_call.status_code}: {api_call.text}')
+            LOGGER.error(f'{api_call.status_code}: {api_call.text}')
             return default
     except Exception as e:
-        logging.error(str(e))
+        LOGGER.error(str(e))
         return default
 
 
@@ -137,3 +160,111 @@ def format_table(data, fields=None, margin=None, sep=None, border=None):
         lines.append(border_line)
 
     return '\n'.join(lines)
+
+
+class CustomFunctions(functions.Functions):
+    @functions.signature(
+        {'types': ['object']}, {'types': ['string']}, {'types': ['string']})
+    def _func_key_val_to_fields(self, data, key_field, val_field):
+        return [
+            {key_field: key, val_field: val}
+            for key, val in data.items()
+        ]
+
+    @functions.signature({'types': ['string', 'null']})
+    def _func_string_or_null(self, data):
+        if isinstance(data, str):
+            if data.strip() == 'None':
+                data = None
+
+        return data
+
+
+def jsearch(transform, data):
+    return jmespath.search(
+        transform,
+        data,
+        options=jmespath.Options(custom_functions=CustomFunctions())
+    )
+
+
+def snake_to_pascal(item):
+    if not isinstance(item, str):
+        return item
+
+    out = []
+    for word in re.split(r'[A-Z_]', item):
+        if len(word) == 1:
+            out.append(word.upper())
+        else:
+            out.append('{}{}'.format(word[0].upper(), word[1:].lower()))
+
+    return ''.join(out)
+
+
+def load_schema(schema_file):
+    schema = load_file(schema_file)
+    raw_schema = yaml.safe_dump(schema)
+    defs = {}
+    files = {}
+    for match in re.finditer(r'\$file:\s(.*(.yaml|.json))', raw_schema):
+        f_name = match.group(1)
+        if f_name not in files:
+            files[f_name] = {
+                'prefix': ''.join(f_name.split('/')[-1].split('.')[:-1]),
+                'ref': match.group(0)
+            }
+
+    for f_name, info in files.items():
+        prefix = info['prefix']
+        if f_name.startswith('/'):
+            path = f_name
+        else:
+            path = os.path.join(
+                os.path.abspath(os.path.dirname(schema_file)),
+                f_name
+            )
+
+        ref_schema = yaml.safe_dump(load_schema(path))
+        ref_schema = ref_schema.replace('#/$defs', f'#/$defs/{prefix}')
+        ref_schema = yaml.safe_load(ref_schema)
+        defs[prefix] = ref_schema.pop('$defs', {})
+        defs[prefix]['_main'] = ref_schema
+        raw_schema = raw_schema.replace(
+            info['ref'], f"$ref: '#/$defs/{prefix}/_main'")
+
+    if files:
+        schema = yaml.safe_load(raw_schema)
+        if '$defs' not in schema:
+            schema['$defs'] = {}
+
+        schema['$defs'].update(defs)
+
+    return schema
+
+
+def validate_schema(data, schema=None, schema_file=None, raise_ex=False):
+    out = False
+    errors = []
+
+    if not schema and not schema_file:
+        errors.append('No schema provided for validation.')
+    else:
+        try:
+            if schema_file:
+                schema = load_schema(schema_file)
+
+            validate(data, schema)
+            out = True
+        except Exception as e:
+            errors.append(e)
+
+    if errors:
+        msg = f'Schema validation error(s): {errors}'
+
+        if raise_ex is True:
+            raise Exception(msg)
+        else:
+            LOGGER.error(msg)
+
+    return out
