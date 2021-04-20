@@ -321,15 +321,13 @@ class CoinsMiner(CoinsBase):
     def __init__(self, baseplate, lock, *args, **kwargs):
         super().__init__(baseplate, lock, **kwargs)
 
-        self.moiners = []
-        self.moined = []
+        self.moined = self._load_moined()
         self.next_pool = self._get_next_pool()
 
     # Std Methods
     def listening_for(self, message):
         if h.now() > self.next_pool:
-            self.next_pool = self._get_next_pool()
-            self.moined = []
+            self._reset()
 
         _handle = False
         text = message.get('text')
@@ -341,19 +339,17 @@ class CoinsMiner(CoinsBase):
             and user not in self.moined
             and user not in self.pool_excludes
         ):
-            self.moiners.append(user)
             _handle = 'moin' in text.lower()
 
         return _handle
 
     # Handler Methods
     def handle(self, message):
-        while self.moiners:
-            moiner = self.moiners.pop(0)
-            response = self._format_mine(moiner)
-            if response:
-                opts = self.build_reply_opts(message)
-                self.reply(message, response, opts)
+        moiner = message['metadata']['source_user']
+        response = self._format_mine(moiner)
+        if response:
+            opts = self.build_reply_opts(message)
+            self.reply(message, response, opts)
 
     # Format Methods
     def _format_mine(self, moiner):
@@ -372,9 +368,17 @@ class CoinsMiner(CoinsBase):
 
         return next_pool if next_pool else 0
 
+    def _load_moined(self):
+        path = os.path.join(self.tx_dir, 'moined.json')
+        if os.path.isfile(path):
+            return h.load_file(path)
+
+        return []
+
     def _mine(self, moiner):
         if moiner not in self.moined:
             self.moined.append(moiner)
+            self._write_moined()
             if not choice(CHOICES):
                 return None
 
@@ -403,6 +407,15 @@ class CoinsMiner(CoinsBase):
                     return 0
 
         return None
+
+    def _reset(self):
+        self.next_pool = self._get_next_pool()
+        self.moined = []
+        self._write_moined()
+
+    def _write_moined(self):
+        path = os.path.join(self.tx_dir, 'moined.json')
+        h.write_file(path, self.moined, 'json')
 
 
 class CoinsAdmin(CoinsBase):
