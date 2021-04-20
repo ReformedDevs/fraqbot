@@ -75,9 +75,8 @@ class Table(object):
     def _deserialize(self, query_result, fields=None):
         def _deserialize_item(item, keys):
             return {
-                k: v
-                for k, v in item.__dict__.items()
-                if k != '_sa_instance_state'
+                k: getattr(item, k, None)
+                for k in keys
             }
 
         fields = self._validate_fields(fields)
@@ -212,6 +211,9 @@ class Table(object):
 
     def query(self, fields=None, _filter=None, sort=None, limit=None,
               raise_ex=False, return_field_value=None):
+        if return_field_value and limit and limit == 1:
+            fields = return_field_value
+
         query = Query(self.table)
         query = self._generate_filter(query, _filter) if _filter else query
         query = self._select_fields(query, fields) if fields else query
@@ -221,15 +223,15 @@ class Table(object):
         with Session(self.engine) as session:
             if isinstance(limit, int):
                 if limit == 1:
-                    data = query.with_session(session).scalar()
+                    data = query.with_session(session).limit(1).all()[0]
                 else:
-                    data = query.with_session(session).limit(limit)
+                    data = query.with_session(session).limit(limit).all()
             else:
                 data = query.with_session(session).all()
 
         self._error('query', raise_ex)
 
-        data = self._deserialize(data)
+        data = self._deserialize(data, fields)
         if limit == 1 and return_field_value and data:
             data = data.get(return_field_value)
 
