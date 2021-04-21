@@ -254,7 +254,6 @@ class CoinsPoolManager(CoinsBase):
     def handle(self, message):
         response = self._format_get_pool()
         if response:
-            self.next_pool = h.now() + 60
             opts = self.build_reply_opts(message)
             self.reply(message, response, opts)
 
