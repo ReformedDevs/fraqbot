@@ -80,10 +80,13 @@ class CoinsBase(Lego):
     def _get_balance(self, user, write_starting_balance=False):
         balance = self.db.balance.get(user, return_field_value='balance')
 
-        if not balance and write_starting_balance is True:
+        if not isinstance(balance, int) and write_starting_balance is True:
             balance = self.starting_value
             self._update_balance(user, balance)
             self._write_tx('SYSTEM', user, balance, 'Starting Balance')
+
+        if not isinstance(balance, int):
+            balance = 0
 
         return balance
 
@@ -192,7 +195,7 @@ class Coins(CoinsBase):
     # Format Methods
     def _format_get_balance(self, user):
         balance = self._get_balance(user, True)
-        if not balance:
+        if not isinstance(balance, int):
             return 'There was an error processing this request. See logs.'
 
         return f'<@{user}> has {balance} {self.name}.'
@@ -262,7 +265,7 @@ class CoinsPoolManager(CoinsBase):
         msg = 'There was an error processing this request. See logs.'
 
         balance = self._get_balance('pool')
-        if not balance:
+        if not isinstance(balance, int):
             return msg
 
         til_next = self._get_time_to_next_fill_up()
@@ -303,8 +306,6 @@ class CoinsPoolManager(CoinsBase):
             self.next_pool = _now + (randint(8, 18) * 3600)
             amt = randint(25, 75) * 10
             pool_balance = self._get_balance('pool', True)
-            if not pool_balance:
-                pool_balance = 0
 
             if self._update_balance('pool', pool_balance + amt):
                 if self._write_tx(
