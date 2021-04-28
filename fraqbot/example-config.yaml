@@ -6,20 +6,18 @@ connectors:
       token: <a Slack API token>
 helpEnabled: true
 legos:
-  AshokCoin:
+  Shakespeare:
     enabled: true
-    path: Local.coins.Coins # Import path to the Lego Class
+    path: Local.shakespeare.Shakespeare # Import path to the Lego Class
     kwargs:
       acl: # acl restricts Lego interaction to only whitelist/blacklist. Usefor for testing.
         whitelist:
           - <a Slack user ID>
-      name: AshokCoin
-      starting_value: 200
+      name: ShakespeareQuotes
       admins:
         - <a Slack user ID>
       triggers:
-        - "!ashokcoin"
-        - "!ak"
+        - "!shake"
       pool_excludes:
         - <a Slack bot ID> # Keeps fraqbot from getting paid from the pool.
   
