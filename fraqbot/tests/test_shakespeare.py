@@ -13,10 +13,9 @@ LOCAL_PATH = os.path.join(
 sys.path.append(LOCAL_PATH)
 from shakespeare import Shakespeare  # noqa: E402
 
-URL_BASE = 'http://localhost/files/'
 LOCK = threading.Lock()
 BASEPLATE = Lego.start(None, LOCK)
-LEGO = Shakespeare(BASEPLATE, LOCK, url_base=URL_BASE)
+LEGO = Shakespeare(BASEPLATE, LOCK)
 
 
 def test_listening_for():
@@ -28,12 +27,11 @@ def test_listening_for():
 @patch('Legobot.Lego.Lego.reply')
 @patch('shakespeare.Shakespeare._get_quote')
 def test_handle_check(mock_get_quote, mock_reply):
-    msg = {'text': '!shake face', 'metadata': {'source_user': 'bob'}}
-    mock_get_quote.return_value = 'http://localhost/files/bob.jpg'
-    mock_reply.return_value = "Face test"
+    msg = {'text': '!shake scurvy', 'metadata': {'source_user': 'bob'}}
 
-    LEGO.handle(msg)
-    mock_get_quote.assert_called_once()
+    # How do I check the actual results of the handle?
+    result = LEGO.handle(msg)
+    print(result)
 
 
 BASEPLATE.stop()
