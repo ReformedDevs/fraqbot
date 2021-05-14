@@ -38,8 +38,8 @@ class NewJob(Lego):
         text = message.get('text')
 
         return (isinstance(text, str) and
-            (text.startswith('!job') or
-            text.startswith('!newjob')))
+                (text.startswith('!job') or
+                text.startswith('!newjob')))
 
     def _get_job(self, term):
 
@@ -96,4 +96,5 @@ class NewJob(Lego):
         return 'New_Job'
 
     def get_help(self):
-        return 'Take the next illogical step in your failing career! Usage: !job [optional:<keyword/term>]'
+        return ('Take the next illogical step in your failing career!' +
+                'Usage: !job [optional:<keyword/term>]')
