@@ -96,5 +96,5 @@ class NewJob(Lego):
         return 'New_Job'
 
     def get_help(self):
-        return ('Take the next illogical step in your failing career!' +
+        return ('Take the next illogical step in your failing career! ' +
                 'Usage: !job [optional:<keyword/term>]')
