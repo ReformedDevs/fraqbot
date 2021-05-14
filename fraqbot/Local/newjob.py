@@ -48,17 +48,18 @@ class NewJob(Lego):
         found_companies = []
 
         if term:
+            term_lowercase = term.lower()
             found_role_modifiers = [
                     phrase for phrase in
-                    self.role_modifiers_list if term in phrase
+                    self.role_modifiers_list if term_lowercase in phrase
                 ]
             found_roles = [
                     phrase for phrase in
-                    self.roles_list if term in phrase
+                    self.roles_list if term_lowercase in phrase
                 ]
             found_companies = [
                     phrase for phrase in
-                    self.companies_list if term in phrase
+                    self.companies_list if term_lowercase in phrase
                 ]
 
         if not found_role_modifiers:
