@@ -32,8 +32,8 @@ def test_listening_for():
 
 
 def test_get_job():
-    assert bool(LEGO._get_job('')) is True
-    assert bool(LEGO._get_job('developer')) is True
+    assert isinstance(LEGO._get_job(''), str) is True
+    assert isinstance(LEGO._get_job('developer'), str) is True
 
 
 @patch('Legobot.Lego.Lego.reply')
