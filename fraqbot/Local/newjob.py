@@ -86,7 +86,8 @@ class NewJob(Lego):
 
     def handle(self, message):
         logger.debug('Handling NewJob request: {}'.format(message['text']))
-        term = message['text'].split(maxsplit=1)[1]
+        text_split = message['text'].split(maxsplit=1)
+        term = text_split[1] if len(text_split) > 1 else None
 
         new_job = self._get_job(term)
         opts = self.build_reply_opts(message)
