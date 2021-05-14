@@ -57,12 +57,15 @@ class NewJob(Lego):
         if not found_companies:
             found_companies = self.companies_list
 
+        random_company = random.choice(found_companies)
+
         final_string = ' '.join([
             'Congrats on the new role!', 
             random.choice(found_role_modifiers), 
             random.choice(found_roles), 
-            'at', 
-            random.choice(found_companies)])
+            'at',
+            '<https://en.wikipedia.org/wiki/{}|{}>'.format(random_company.replace(' '. '_'), random_company)
+            ])
         
         return final_string
 
