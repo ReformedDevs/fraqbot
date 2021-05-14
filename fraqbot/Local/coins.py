@@ -274,16 +274,15 @@ class CoinsPoolManager(CoinsBase):
     def _format_get_pool(self):
         msg = 'There was an error processing this request. See logs.'
 
-        balance = self._get_balance('pool')
-        if not isinstance(balance, int):
-            return msg
+        # balance = self._get_balance('pool')
+        # if not isinstance(balance, int):
+        #     return msg
 
         til_next = self._get_time_to_next_fill_up()
         if not til_next:
             return msg
 
-        return (f'The Pool has {balance} {self.name}.\n'
-                f'Next fill up in {til_next}')
+        return (f'Next fill up and disbursement in {til_next}')
 
     # Action Methods
     def _get_next_pool(self):
@@ -313,7 +312,7 @@ class CoinsPoolManager(CoinsBase):
     def _update_pool(self):
         _now = h.now()
         if self.next_pool <= _now:
-            self.next_pool = _now + (randint(8, 18) * 3600)
+            self.next_pool = _now + (randint(4, 15) * 3600)
             amt = randint(25, 75) * 10
             pool_balance = self._get_balance('pool', True)
 
