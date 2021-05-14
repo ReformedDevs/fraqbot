@@ -77,7 +77,10 @@ class CoinsBase(Lego):
             setattr(self, key, kwargs.get(key, value))
 
     # Action Methods
-    def _get_balance(self, user, write_starting_balance=False):
+    def _get_balance(self, user, write_starting_balance=False, default=None):
+        if default is None:
+            default = 0
+
         balance = self.db.balance.get(user, return_field_value='balance')
 
         if not isinstance(balance, int) and write_starting_balance is True:
@@ -86,7 +89,7 @@ class CoinsBase(Lego):
             self._write_tx('SYSTEM', user, balance, 'Starting Balance')
 
         if not isinstance(balance, int):
-            balance = 0
+            balance = default
 
         return balance
 
@@ -232,8 +235,15 @@ class CoinsPoolManager(CoinsBase):
     def __init__(self, baseplate, lock, *args, **kwargs):
         super().__init__(baseplate, lock, **kwargs)
 
+        self._init_escrow()
         self.next_pool = self._get_next_pool()
         self._update_pool()
+
+    # Init Methods
+    def _init_escrow(self):
+        balance = self._get_balance('escrow', default=False)
+        if balance is False:
+            self._update_balance('escrow', 0)
 
     # Std Methods
     def listening_for(self, message):
@@ -264,16 +274,15 @@ class CoinsPoolManager(CoinsBase):
     def _format_get_pool(self):
         msg = 'There was an error processing this request. See logs.'
 
-        balance = self._get_balance('pool')
-        if not isinstance(balance, int):
-            return msg
+        # balance = self._get_balance('pool')
+        # if not isinstance(balance, int):
+        #     return msg
 
         til_next = self._get_time_to_next_fill_up()
         if not til_next:
             return msg
 
-        return (f'The Pool has {balance} {self.name}.\n'
-                f'Next fill up in {til_next}')
+        return (f'Next fill up and disbursement in {til_next}')
 
     # Action Methods
     def _get_next_pool(self):
@@ -303,7 +312,7 @@ class CoinsPoolManager(CoinsBase):
     def _update_pool(self):
         _now = h.now()
         if self.next_pool <= _now:
-            self.next_pool = _now + (randint(8, 18) * 3600)
+            self.next_pool = _now + (randint(4, 15) * 3600)
             amt = randint(25, 75) * 10
             pool_balance = self._get_balance('pool', True)
 
@@ -323,11 +332,12 @@ class CoinsMiner(CoinsBase):
 
         self.moined = self._load_moined()
         self.next_pool = self._get_next_pool()
+        self.pool_id = self._get_escrow_pool_id()
 
     # Std Methods
     def listening_for(self, message):
         if h.now() > self.next_pool:
-            self._reset()
+            self._reset(message)
 
         _handle = False
         text = message.get('text')
@@ -346,27 +356,60 @@ class CoinsMiner(CoinsBase):
     # Handler Methods
     def handle(self, message):
         moiner = message['metadata']['source_user']
-        response = self._format_mine(moiner)
-        if response:
-            opts = self.build_reply_opts(message)
-            self.reply(message, response, opts)
+        self._mine(moiner)
 
-    # Format Methods
-    def _format_mine(self, moiner):
+    def _format_disburse(self, payment):
         response = None
-        paid = self._mine(moiner)
+        moiner = payment['payee_id']
+        amount = payment['amount']
+        paid = self._pay(
+            'escrow', moiner, amount, 'Happy Moin!')
         if paid:
-            response = (f'<@{moiner}> received {paid} {self.name} from the '
-                        'Pool. Happy Moin!')
+            response = (f'- <@{moiner}> received {amount} {self.name} from '
+                        'the Pool.')
 
         return response
 
     # Action Methods
-    def _get_next_pool(self):
-        next_pool = self.db.pool_history.query(
-            limit=1, sort='id,desc', return_field_value='next_fillup_ts')
+    def _disburse_from_escrow(self, message, escrow_group_id):
+        payments = self.db.escrow.query(
+            _filter={'escrow_group_id': escrow_group_id}, sort='id,asc')
+        responses = []
 
-        return next_pool if next_pool else 0
+        for payment in payments:
+            response = self._format_disburse(payment)
+            if response:
+                responses.append(response)
+
+        if responses:
+            msg = 'During the last pool period:```{}```\nHappy Moin!'.format(
+                '\n'.join(responses))
+            channel = self.botThread.get_channel_id_by_name('general')
+            if channel:
+                self.botThread.slack_client.api_call(
+                    'chat.postMessage',
+                    as_user=True,
+                    channel=channel,
+                    text=msg
+                )
+
+    def _get_escrow_pool_id(self):
+        return self._get_last_pool_item('id', 1)
+
+    def _get_last_pool_item(self, return_field=None, default=None):
+        q_kwargs = {'limit': 1, 'sort': 'id,desc'}
+        if return_field:
+            q_kwargs['return_field_value'] = return_field
+
+        data = self.db.pool_history.query(**q_kwargs)
+
+        if data is None and return_field:
+            data = default
+
+        return data
+
+    def _get_next_pool(self):
+        return self._get_last_pool_item('next_fillup_ts', 0)
 
     def _load_moined(self):
         path = os.path.join(self.tx_dir, 'moined.json')
@@ -401,17 +444,28 @@ class CoinsMiner(CoinsBase):
             if opts and pool_balance and divvy:
                 divvy = divvy // 2 + 1 if divvy >= 3 else 2
                 amt = randint(2, divvy) * divisor
-                if self._pay('pool', moiner, amt, 'Happy Moin!'):
-                    return amt
-                else:
-                    return 0
+                self._to_escrow(moiner, amt)
 
         return None
 
-    def _reset(self):
+    def _reset(self, message):
         self.next_pool = self._get_next_pool()
+        self._disburse_from_escrow(message, self.pool_id)
+        self.pool_id = self._get_escrow_pool_id()
         self.moined = []
         self._write_moined()
+
+    def _to_escrow(self, moiner, amt):
+        tx_msg = (f'Mining for {moiner}. Escrow group id: {self.pool_id}')
+        if self._pay('pool', 'escrow', amt, tx_msg):
+            self.db.escrow.upsert({
+                'escrow_group_id': self.pool_id,
+                'tx_timestamp': h.now(),
+                'payer_id': 'pool',
+                'payee_id': moiner,
+                'amount': amt,
+                'memo': tx_msg
+            })
 
     def _write_moined(self):
         path = os.path.join(self.tx_dir, 'moined.json')

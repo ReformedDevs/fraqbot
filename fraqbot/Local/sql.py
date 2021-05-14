@@ -223,7 +223,8 @@ class Table(object):
         with Session(self.engine) as session:
             if isinstance(limit, int):
                 if limit == 1:
-                    data = query.with_session(session).limit(1).all()[0]
+                    data = query.with_session(session).limit(1).all()
+                    data = data[0] if data else {}
                 else:
                     data = query.with_session(session).limit(limit).all()
             else:
