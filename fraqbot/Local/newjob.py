@@ -45,7 +45,7 @@ class NewJob(Lego):
         found_roles = []
         found_companies = []
 
-        if (term)
+        if term:
             found_role_modifiers = [phrase for phrase in self.role_modifiers_list if term in phrase]
             found_roles = [phrase for phrase in self.roles_list if term in phrase]
             found_companies = [phrase for phrase in self.companies_list if term in phrase]
