@@ -29,7 +29,7 @@ class NewJob(Lego):
         companies = h.load_file(
             os.path.join(LOCAL_DIR, 'lists', 'companies.txt'), raw=True)
 
-        if role_modifiers and roles and companies :
+        if role_modifiers and roles and companies:
             self.role_modifiers_list = role_modifiers.splitlines()
             self.roles_list = roles.splitlines()
             self.companies_list = companies.splitlines()
@@ -37,7 +37,9 @@ class NewJob(Lego):
     def listening_for(self, message):
         text = message.get('text')
 
-        return isinstance(text, str) and (text.startswith('!job') or text.startswith('!newjob'))
+        return (isinstance(text, str) and
+            (text.startswith('!job') or
+            text.startswith('!newjob'))
 
     def _get_job(self, term):
 
@@ -46,9 +48,18 @@ class NewJob(Lego):
         found_companies = []
 
         if term:
-            found_role_modifiers = [phrase for phrase in self.role_modifiers_list if term in phrase]
-            found_roles = [phrase for phrase in self.roles_list if term in phrase]
-            found_companies = [phrase for phrase in self.companies_list if term in phrase]
+            found_role_modifiers = [
+                    phrase for phrase in
+                    self.role_modifiers_list if term in phrase
+                ]
+            found_roles = [
+                    phrase for phrase in
+                    self.roles_list if term in phrase
+                ]
+            found_companies = [
+                    phrase for phrase in
+                    self.companies_list if term in phrase
+                ]
 
         if not found_role_modifiers:
             found_role_modifiers = self.role_modifiers_list
@@ -60,13 +71,16 @@ class NewJob(Lego):
         random_company = random.choice(found_companies)
 
         final_string = ' '.join([
-            'Congrats on the new role!', 
-            random.choice(found_role_modifiers), 
-            random.choice(found_roles), 
+            'Congrats on the new role!',
+            random.choice(found_role_modifiers),
+            random.choice(found_roles),
             'at',
-            '<https://en.wikipedia.org/wiki/{}|{}>'.format(random_company.replace(' ', '_'), random_company)
+            '<https://en.wikipedia.org/wiki/{}|{}>'.format(
+                    random_company.replace(' ', '_'),
+                    random_company
+                )
             ])
-        
+
         return final_string
 
     def handle(self, message):
