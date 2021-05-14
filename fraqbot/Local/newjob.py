@@ -23,11 +23,11 @@ class NewJob(Lego):
         self.roles_list = []
         self.companies_list = []
         role_modifiers = h.load_file(
-            os.path.join(LOCAL_DIR, 'lists', 'quotes.txt'), raw=True)
+            os.path.join(LOCAL_DIR, 'lists', 'role_modifiers.txt'), raw=True)
         roles = h.load_file(
-            os.path.join(LOCAL_DIR, 'lists', 'quotes.txt'), raw=True)
+            os.path.join(LOCAL_DIR, 'lists', 'roles.txt'), raw=True)
         companies = h.load_file(
-            os.path.join(LOCAL_DIR, 'lists', 'quotes.txt'), raw=True)
+            os.path.join(LOCAL_DIR, 'lists', 'companies.txt'), raw=True)
 
         if role_modifiers and roles and companies :
             self.role_modifiers_list = role_modifiers.splitlines()
