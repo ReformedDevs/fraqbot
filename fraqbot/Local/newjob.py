@@ -39,7 +39,7 @@ class NewJob(Lego):
 
         return (isinstance(text, str) and
             (text.startswith('!job') or
-            text.startswith('!newjob'))
+            text.startswith('!newjob')))
 
     def _get_job(self, term):
 
