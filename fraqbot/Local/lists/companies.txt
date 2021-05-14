@@ -62,7 +62,6 @@ AmSouth Bancorporation
 Atlantic Marine
 Big B Drugs
 Bruno's
-Buffalo Rock
 Colonial Bancgroup
 Colonial Properties
 Dallas Mill
@@ -486,7 +485,6 @@ Samsung Activewear
 Samsung Semiconductor
 San Jose Sharks, LLC
 SanDisk
-Sanmina Corporation
 SAP Ariba
 Save Mart Supermarkets
 Scaled Composites
@@ -529,7 +527,6 @@ Tastee-Freez
 Taylor Guitars
 TaylorMade
 Technicolor USA
-Teledyne Technologies
 Tesla, Inc.
 Thrasher
 Ticketmaster
@@ -649,7 +646,6 @@ LSI Corporation
 Mad Catz
 Malibu Boats
 Matson, Inc.
-Maxtor
 Maxygen
 Memorex
 Mervyn's
@@ -691,7 +687,6 @@ URS Corporation
 Verisign
 Vigor Gaming
 Virgin America
-Vans
 Waste Connections
 Watson Pharmaceuticals
 West Coast Choppers
@@ -836,9 +831,7 @@ Flying Dog Brewery
 Janus Capital Group
 Jolly Rancher
 Lärabar
-Level 3 Communications
 Magpul Industries
-MapQuest
 Mushkin
 NextMedia Group
 Paladin Press
@@ -1037,7 +1030,6 @@ Fairwinds Credit Union
 Fidelity National Financial
 Firehouse Subs
 FIS
-Fleming's Prime Steakhouse & Wine Bar
 Florida Credit Union
 Florida East Coast Railway
 Florida Power & Light
@@ -1111,7 +1103,6 @@ SpaceX launch facilities
 Spirit Airlines
 Stein Mart
 Suncoast Credit Union
-Swisher International Group
 Tech Data
 TECO Energy
 Tournament Players Club
@@ -1147,7 +1138,6 @@ Barnett Bank
 Chalk's International Airlines
 Charter Company
 Chris-Craft Industries
-Circle K
 Claire's
 Cuppy's Coffee
 Custom Air Transport
@@ -1209,7 +1199,6 @@ Global Franchise Group
 Great American Cookies
 Hitachi Koki U.S.A. Ltd. and Hitachi Telecom Inc.
 The Home Depot
-Hooters
 Huddle House
 LexisNexis Risk Solutions
 LendingPoint
@@ -1252,7 +1241,6 @@ Element Skateboards
 Gold Kist
 Harveys Supermarkets
 Infor
-Kaiser Permanente
 Mirant
 Newell Brands
 RockTenn
@@ -1275,7 +1263,6 @@ Hawaiian Telcom
 Island Pacific Energy
 Kamakura Corporation
 Kauaʻi Island Utility Cooperative
-Matson, Inc.
 Maui Land & Pineapple Company
 Mauna Loa Macadamia Nut Corporation
 Mountain Apple Company
@@ -1340,7 +1327,6 @@ TSheets
 WinCo Foods
 Yellowstone Bear World
 All That Is Heavy
-Building Materials Holding Corporation
 Coeur Mining
 Coldwater Creek
 King's Variety Store
@@ -1372,16 +1358,13 @@ Brown County State Bank
 Bunn-O-Matic Corporation
 Busey Bank
 Cars.com
-Caterpillar Inc.
 CDW
 Citizens Equity First Credit Union
 City Water, Light & Power
 Consolidated Communications
 Country Financial
-Credit Union 1
 Dawn Equipment Company
 Daxcon
-Detonics
 Discover Financial
 Dot Foods
 DTV Innovations
@@ -1565,7 +1548,6 @@ Pizza Ranch
 Principal Financial Group
 Radio Dubuque
 The Right Stuf International
-Riverdeep
 Rockwell Collins
 Vermeer Company
 Von Maur
@@ -1654,7 +1636,6 @@ Ebonite International
 Equix
 Exstream Software
 Fazoli's
-Florida Tile
 Forcht Group of Kentucky
 Four Roses
 Fruit of the Loom
@@ -1816,7 +1797,6 @@ Urban One
 W. R. Grace and Company
 Westat
 ZeniMax Media
-0–9
 2 Minute Medicine
 Actifio
 Akamai Technologies
@@ -1883,7 +1863,6 @@ L. S. Starrett Company
 Liberty Mutual
 Lionbridge
 Lola.com
-LPL Financial
 Market Basket
 Massachusetts Bay Trading Company
 Massachusetts Mutual Life Insurance Company
@@ -2239,7 +2218,6 @@ Patterson Companies
 Pearson's Candy Company
 Piper Jaffray
 Polaris Industries
-Post Consumer Brands
 Perforce Software
 Quality Bicycle Products
 Radisson Blu
@@ -2277,14 +2255,12 @@ Alliant Techsystems
 Buffets, Inc.
 Champion Air
 Control Data Corporation
-Delta Air Lines
 Fair Isaac Corporation
 Grand Casinos
 Green Giant
 Greyhound Lines
 Griswold Signal Company
 Johnson Boat Works
-Lawson Software
 MAIR Holdings
 Mesaba Airlines
 Minneapolis-Moline
@@ -2306,7 +2282,6 @@ St. Jude Medical
 Sellner Manufacturing
 SuperAmerica
 SuperValu
-The Travelers Companies
 Unicel
 Valspar
 Ergon
@@ -2315,7 +2290,6 @@ Peavey Electronics
 Viking Range
 Adam's Mark
 A. G. Edwards
-AMC Theatres
 Ameren
 Andy's Frozen Custard
 Anheuser-Busch
@@ -2340,7 +2314,6 @@ Energizer Holdings
 Enterprise Rent-A-Car
 Express Scripts Incorporated
 Farmland Industries
-Ferrellgas
 GoJet Airlines
 Graybar Electric Company
 Great Plains Energy
@@ -2354,7 +2327,6 @@ Interstate Bakeries Corporation
 Kansas City Life Insurance Company
 Kansas City Southern Industries
 Leggett & Platt
-Lifetouch
 McCabe-Powers Body Company
 MFA Oil
 Metropark Communications
@@ -2389,7 +2361,6 @@ Merlin Airways
 RightNow Technologies
 Semitool
 Shiloh Rifle Manufacturing Company
-Affiliated Foods Midwest
 Berkshire Hathaway
 Buckle
 Cabela's
@@ -2550,7 +2521,6 @@ Barnes & Noble
 BlackRock
 Bloomberg L.P.
 Bristol-Myers Squibb
-Brooks Brothers
 Bulova
 CA Technologies
 Calvin Klein
@@ -2611,7 +2581,6 @@ Izzy Gold Records
 J.Crew
 JPMorgan Chase
 J. Press
-Jarden
 Jefferies Group
 JetBlue
 Jingle Punks Music
@@ -2650,7 +2619,6 @@ MSCI
 NASDAQ
 Nathan's Famous
 National Fuel Gas
-NBCUniversal
 NBT Bank
 NBTY
 NEON Communications Group, Inc.
@@ -2802,12 +2770,10 @@ Warner Communications
 The Weinstein Company
 Advance Auto Parts
 Bank of America
-BBVA Compass
 Biscuitville
 Bojangles' Famous Chicken 'n Biscuits
 Burt's Bees
 Carquest
-Champion
 Chiquita Brands International
 Columbia Forest Products
 CommScope
@@ -2850,7 +2816,6 @@ Reynolds American
 Roses Stores
 Salix Pharmaceuticals
 SAS Institute
-Sealed Air
 Sealy Corporation
 Sky Lease Cargo
 SPX Corporation
@@ -2858,7 +2823,6 @@ Thomas Built Buses
 Thomasville Furniture Industries
 Truist Financial
 TW Garner Food Company
-VF Corporation
 VPS Convenience
 Wells Fargo (East Coast headquarters)
 Abercrombie & Fitch
@@ -2890,7 +2854,6 @@ Castle Aviation
 Charley's Grilled Subs
 Charter One Bank
 Cedar Fair
-Chiquita Brands International
 Cincinnati Financial
 Cintas
 Cleveland-Cliffs
@@ -2959,7 +2922,6 @@ Moen
 NACCO Industries
 National City Corporation
 Nationwide Insurance
-NCR Corporation
 Nestlé USA - Prepared Foods Division
 NewPage Corporation
 Owens Corning
@@ -2991,18 +2953,15 @@ Steak Escape
 Sunglass Hut International
 Sunny Delight Beverages
 Teradata
-Thor Industries
 Timken Company
 Trans States Airlines, operates as AmericanConnection
 TransDigm Group
 TravelCenters of America
 Tween Brands
-United States Playing Card Company
 Victoria's Secret
 Wendy's
 Western & Southern Financial Group
 Westfield Insurance
-White Castle
 Worthington Industries
 YRC Regional Transportation
 Beaujon Aircraft
@@ -3230,7 +3189,6 @@ Kennametal
 Knoll
 Lincoln National Corporation
 MAACO
-Mack Trucks
 Majestic Athletic
 Meadows Frozen Custard
 Mellon Financial
@@ -3255,7 +3213,6 @@ STV Group
 SunGard
 Sunoco
 Teleflex, Inc.
-TransDigm Group
 Triumph Group
 Toll Brothers
 UGI Corporation, holding company of AmeriGas Partners, L.P..
@@ -3292,7 +3249,6 @@ Citizens Financial Group
 Coastal Extreme Brewing Company
 Colibri Group
 CVS Health
-CVS Pharmacy
 Daniele, Inc.
 Deepwater Wind
 Embrace Home Loans
@@ -3321,7 +3277,6 @@ Southside Community Land Trust
 Swarovski North America Ltd.[1]
 Textron
 Towerstream
-United Natural Foods
 Upserve
 38 Studios
 Amperex Electronic
@@ -3377,7 +3332,6 @@ Chattem
 Community Health Systems
 Covenant Transport
 Cracker Barrel
-CraftWorks Restaurants & Breweries
 CTSI-Global
 Dollar General
 Double Cola
@@ -3389,14 +3343,12 @@ First Horizon National Corporation
 First Tennessee
 Fred's
 IdleAir
-International Paper
 Jack Daniel's Distillery
 Jiffy Steamer
 King Pharmaceuticals
 Lenny's Sub Shop
 Lodge
 Malco Theatres
-Malibu Boats
 MasterCraft
 McKee Foods
 Memphis Furniture
@@ -3441,7 +3393,6 @@ Capital One
 CarMax
 Circuit City
 Colgan Air
-Compass Airlines
 Dollar Tree
 Dominion Resources
 DynCorp International
@@ -3488,7 +3439,6 @@ Ukrop's Super Market
 Universal Corporation
 Velocity Micro
 Alaska Air Group
-Alaska Airlines
 Amazon
 Avast! Recording Company
 Avista
@@ -3499,14 +3449,12 @@ Big Fish Games
 Books4cars
 Burgerville
 Cartoys
-Costco
 Cyan Worlds
 Darigold
 Dick's Drive-In
 Dillanos Coffee Roasters
 Expedia Group
 ExtraHop Networks
-Fisher Investments
 Focus Designs
 Funko
 GarageGames
@@ -3525,7 +3473,6 @@ Liberty Orchards
 LiquidPlanner
 LMN Architects
 Lollar Pickups
-Microsoft
 MOD Pizza
 MTR Western
 Nautilus, Inc.
@@ -3536,7 +3483,6 @@ Pacific Research Laboratories
 Papa Murphy's
 PayScale
 PCC Community Markets
-PeaceHealth
 Planetary Resources
 Premera Blue Cross
 Rainier Mountaineering
@@ -3573,15 +3519,11 @@ Zillow
 Zumiez
 ZymoGenetics
 43 Things
-Boeing
 Branded Entertainment Network
 EMC Isilon
 Group Health Cooperative
 Kaiser Aluminum
-Kaiser Permanente
 Qliance
-UPS
-Red Robin
 Gabriel Brothers
 Marquee Cinemas
 Tudor's Biscuit World
