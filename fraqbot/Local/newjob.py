@@ -65,6 +65,12 @@ class NewJob(Lego):
                     phrase.lower()
                 ]
 
+        extra_text = ('\n\n(No match for search term)'
+                      if (term and
+                          (not found_role_modifiers and
+                           not found_roles and
+                           not found_companies)) else '')
+
         if not found_role_modifiers:
             found_role_modifiers = self.role_modifiers_list
         if not found_roles:
@@ -82,7 +88,8 @@ class NewJob(Lego):
             '<https://en.wikipedia.org/wiki/{}|{}>'.format(
                     random_company.replace(' ', '_'),
                     random_company
-                )
+                ),
+            extra_text
             ])
 
         return final_string
