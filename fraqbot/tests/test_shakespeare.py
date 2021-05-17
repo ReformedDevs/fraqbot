@@ -29,7 +29,7 @@ def test_get_quote():
     default = 'Not so much brain as ear wax.'
     assert LEGO._get_quote('') == default
     assert LEGO._get_quote('bad search') == default
-    assert LEGO._get_quote('scurvy') == 'I scorn you, scurvy companion.'
+    assert LEGO._get_quote('scurvy') == '11. I scorn you, scurvy companion.'
 
 
 @patch('Legobot.Lego.Lego.reply')
