@@ -1,6 +1,7 @@
 import os
 import sys
 import threading
+import re
 
 from Legobot.Lego import Lego
 from mock import patch
@@ -34,6 +35,12 @@ def test_listening_for():
 def test_get_job():
     assert isinstance(LEGO._get_job(''), str)
     assert isinstance(LEGO._get_job('developer'), str)
+    assert isinstance(LEGO._get_job('Mercedes-Benz U.S. International'), str)
+    assert 'Dreamland Bar-B-Que' in LEGO._get_job('Dreamland Bar-B-Que')
+    # 4 instances (modifier, role, company, link)
+    assert len(re.findall('Management', LEGO._get_job('Management'))) >= 4
+    assert len(re.findall('Management', LEGO._get_job('MANAGEMENT'))) >= 4
+    assert len(re.findall('Management', LEGO._get_job('management'))) >= 4
 
 
 @patch('Legobot.Lego.Lego.reply')
