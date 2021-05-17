@@ -1,7 +1,7 @@
 import os
+import re
 import sys
 import threading
-import re
 
 from Legobot.Lego import Lego
 from mock import patch
