@@ -6,8 +6,6 @@ from random import randint
 import re
 import sys
 
-from tabulate import tabulate
-
 from Legobot.Connectors.Slack import Slack
 from Legobot.Lego import Lego
 
@@ -526,24 +524,13 @@ class CoinsAdmin(CoinsBase):
         response = None
         balances = self._get_balances()
         if balances:
-            data = []
-            for b in balances:
-                name = self._get_user_name(b['user'])
-                if name:
-                    data.append((b['user'], name, b['balance']))
-
-            response = tabulate(
-                [('Name', 'Balance')] + [
-                    ('@{}'.format(d[1]), d[2]) for d in data],
-                headers='firstrow',
-                tablefmt='github'
+            response = h.tabulate_data(
+                balances,
+                {'user': 'User', 'balance': 'Balance'},
+                fields=['user', 'balance'],
+                user_id_field='user',
+                thread=self.botThread
             )
-
-            for d in data:
-                response = response.replace(
-                    '@{}'.format(d[1]), '<@{}>'.format(d[0]))
-
-            response = f'```{response}```'
 
         return response
 

@@ -303,9 +303,14 @@ def tabulate_data(data, _map, fields=None, user_id_field=None, thread=None):
             record.append(d.get(field, ''))
             if user_replace and field == user_id_field:
                 name = thread.get_user_name_by_id(record[-1], True)
-                record.append(name if name else '')
+                record.append(name if name else None)
 
-        new_data.append(record)
+        if user_replace:
+            if record[idx + 1]:
+                new_data.append(record)
+
+        else:
+            new_data.append(record)
 
     if user_replace:
         table_data = [
