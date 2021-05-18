@@ -9,6 +9,7 @@ import jmespath
 from jmespath import functions
 from jsonschema import validate
 import requests
+from tabulate import tabulate
 import yaml
 
 
@@ -280,3 +281,52 @@ def validate_schema(data, schema=None, schema_file=None, raise_ex=False):
             LOGGER.error(msg)
 
     return out
+
+
+def tabulate_data(data, _map, fields=None, user_id_field=None, thread=None):
+    if not fields or not isinstance(fields, (list, str)):
+        fields = sorted(list(set([
+            k for d in data
+            for k in d.keys()
+        ])))
+
+    if isinstance(fields, str):
+        fields = sorted([f.strip() for f in fields.split(',')])
+
+    user_replace = user_id_field and thread and user_id_field in fields
+    idx = fields.index(user_id_field) if user_replace else 0
+    new_data = []
+
+    for d in data:
+        record = []
+        for field in fields:
+            record.append(d.get(field, ''))
+            if user_replace and field == user_id_field:
+                name = thread.get_user_name_by_id(record[-1], True)
+                record.append(name if name else '')
+
+        new_data.append(record)
+
+    if user_replace:
+        table_data = [
+            [
+                '@{}'.format(d[idx + 1]) if i == idx else item
+                for i, item in enumerate(d)
+                if i != idx + 1
+            ]
+            for d in new_data
+        ]
+
+    mapped_fields = [_map.get(f, f) for f in fields]
+
+    out = tabulate(
+        [mapped_fields] + table_data, headers='firstrow', tablefmt='github')
+
+    if user_replace:
+        for d in new_data:
+            out = out.replace(
+                '@{}'.format(d[idx + 1]),
+                '<@{}>'.format(d[idx])
+            )
+
+    return f'```{out}```'
