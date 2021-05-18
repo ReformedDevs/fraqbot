@@ -179,6 +179,18 @@ class CustomFunctions(functions.Functions):
 
         return data
 
+    @functions.signature(
+        {'types': ['boolean', 'array', 'object', 'null', 'string',
+                   'number', 'expref']},
+        {'types': ['boolean', 'array', 'object', 'null', 'string',
+                   'number', 'expref']},
+        {'types': ['boolean']})
+    def _func_val_or_val(self, val1, val2, condition):
+        if condition:
+            return val1
+        else:
+            return val2
+
 
 def jsearch(transform, data):
     return jmespath.search(
