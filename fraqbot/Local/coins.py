@@ -135,12 +135,16 @@ class CoinsBase(Lego):
 class Coins(CoinsBase):
     # Std Methods
     def get_help(self):
-        lines = [f'Pay each other in {self.name}']
+        lines = [f'.\nPay each other in {self.name}:']
         triggers = '|'.join(self.triggers)
-        lines.append(f'To see your balance: `{triggers} balance`')
-        lines.append(f'To give coins: `{triggers} tip|pay <user> '
+        lines.append(f'    • To see your balance: `{triggers} balance`')
+        lines.append(f'    • To give coins: `{triggers} tip|pay <user> '
                      '<int> [<optional memo>]`')
-        lines.append(f'To see the pool balance: `{triggers} pool`')
+        lines.append(f'    • To see when the pool resets: `{triggers} pool`')
+        lines.append('\n    • *Admin functions:*')
+        lines.append(f'        • To see all balances: `{triggers} balances`')
+        lines.append(
+            f'        • To see current escrow (DM only): `{triggers} escrow`')
 
         return '\n'.join(lines)
 
@@ -504,32 +508,66 @@ class CoinsAdmin(CoinsBase):
             self.reply(message, response, opts)
 
     def _handle_balances(self, message, params):
-        user = message['metadata']['source_user']
-        return self._format_get_balances(user)
+        return self._format_get_balances()
+
+    def _handle_escrow(self, message, params):
+        private = message.get('metadata', {}).get('is_private_message', False)
+        if private:
+            current_escrow_id = self.db.pool_history.query(
+                sort={'field': 'id', 'direction': 'desc'},
+                limit=1,
+                return_field_value='id'
+            )
+            if current_escrow_id:
+                return self._format_get_escrow(current_escrow_id)
 
     # Formatter Methods
-    def _format_get_balances(self, user):
+    def _format_get_balances(self):
         response = None
-        if user in self.admins:
-            balances = self._get_balances()
-            if balances:
-                data = []
-                for b in balances:
-                    name = self._get_user_name(b['user'])
-                    if name:
-                        data.append((b['user'], name, b['balance']))
+        balances = self._get_balances()
+        if balances:
+            data = []
+            for b in balances:
+                name = self._get_user_name(b['user'])
+                if name:
+                    data.append((b['user'], name, b['balance']))
 
-                response = tabulate(
-                    [('Name', 'Balance')] + [
-                        ('@{}'.format(d[1]), d[2]) for d in data],
-                    headers='firstrow',
-                    tablefmt='github'
-                )
+            response = tabulate(
+                [('Name', 'Balance')] + [
+                    ('@{}'.format(d[1]), d[2]) for d in data],
+                headers='firstrow',
+                tablefmt='github'
+            )
 
-                for d in data:
-                    response = response.replace(
-                        '@{}'.format(d[1]), '<@{}>'.format(d[0]))
+            for d in data:
+                response = response.replace(
+                    '@{}'.format(d[1]), '<@{}>'.format(d[0]))
 
-                response = f'```{response}```'
+            response = f'```{response}```'
+
+        return response
+
+    def _format_get_escrow(self, escrow_group_id):
+        response = None
+        escrow = self.db.escrow.query(
+            fields=['payee_id', 'amount', 'memo'],
+            _filter={'escrow_group_id': escrow_group_id},
+            sort={'field': 'tx_timestamp', 'order': 'asc'}
+        )
+
+        if escrow:
+            escrow = h.jsearch(
+                ('[].{payee_id: payee_id, amount: amount, memo: val_or_val'
+                 '(`Moin`, memo, contains(memo, `Mining`))}'),
+                escrow
+            )
+            table = h.tabulate_data(
+                escrow,
+                {'payee_id': 'User', 'amount': 'Amount', 'memo': 'Memo'},
+                fields=['payee_id', 'amount', 'memo'],
+                user_id_field='payee_id',
+                thread=self.botThread
+            )
+            response = f'Current Unpaid Escrow: {table}'
 
         return response
