@@ -75,13 +75,13 @@ class NewJob(Lego):
         random_company = random.choice(found_companies)
 
         final_string = ' '.join([
-            'Congrats on the new role!',
             random.choice(found_role_modifiers),
             random.choice(found_roles),
             'at',
-            '<https://en.wikipedia.org/wiki/{}|{}>'.format(
+            '{} (<https://en.wikipedia.org/wiki/{}|en.wikipedia.org/wiki/{}>)'.format(
+                    random_company,
                     random_company.replace(' ', '_'),
-                    random_company
+                    random_company.replace(' ', '_')
                 )
             ])
 
