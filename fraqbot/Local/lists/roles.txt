@@ -45,7 +45,6 @@ Animal Trainer
 Anthropologist
 Appraiser
 Aquacultural Manager
-Click here for a Career Test that will show you your best career choice
 Archeologist
 Architectural Drafter
 Architecture Teacher
@@ -764,3 +763,489 @@ Wind Turbine Service Technician
 Woodworker
 Zoologist
 Wildlife Biologist
+Physician
+School Psychologist
+Interpreter & Translator
+Veterinary Technologist & Technician
+IT Manager
+Computer Systems Administrator
+Substance Abuse Counselor
+Landscaper & Groundskeeper
+Financial Advisor
+Marriage & Family Therapist
+Compliance Officer
+High School Teacher
+Clinical Laboratory Technician
+Maintenance & Repair Worker
+Bookkeeping, Accounting, & Audit Clerk
+Recreation & Fitness Worker
+Insurance Agent
+Middle School Teacher
+Paramedic
+Hairdresser
+Patrol Officer
+School Counselor
+Executive Assistant
+Personal Care Aide
+Clinical Social Worker
+Business Operations Manager
+Meeting, Convention & Event Planner
+Nursing Aide
+Architect
+HR Specialist
+Real Estate Agent
+Auto Mechanic
+Restaurant Cook
+Child & Family Social Worker
+Administrative Assistant
+Receptionist
+Paralegal
+Cement Mason & Concrete Finisher
+Sports Coach
+Brickmason & Blockmason
+Janitor
+Delivery Truck Driver
+Maid & Housekeeper
+Construction Worker
+Fabricator
+Event/Meeting Planner
+Secretary / Administrative Assistant
+Advertising Manager
+Interpreter and Translator
+Social Media Manager
+Writer and Editor
+Guidance Counselor
+School Principal
+Teacher
+Bank Teller
+Bookkeeping, Accounting, and Auditing Clerk
+Claims Adjuster
+Examiner
+Investigator
+Chef
+Waiter/Waitress
+Cardiovascular Technologist
+Dietitian/Nutritionist
+Doctor
+EMT
+Licensed Practical Nurse
+Medical Laboratory Technician
+Physical Therapy Assistant
+Consultant
+Correctional Officer
+Firefighter
+Judge
+Legal Assistant
+Police Officer
+Postal Service Worker
+Animal Groomer
+Cosmetologist
+Fitness Trainer
+Hairstylist
+Marriage and Family Therapist
+Retail Supervisor
+Aircraft Mechanic
+Airline Pilot
+Airport Security Screener
+Ski Instructor
+Caretaker
+Cake Decorator
+Florist
+Wedding Consultant
+Farmer
+Caterer
+Stylist
+Tour Guide
+Zookeeper
+Park Ranger
+Booking Agent
+Wedding Planner
+Horticulturist
+Staff Photographer
+Event Planner
+Java Developer
+Data Scientist
+Product Manager
+Enterprise Architect
+Devops Engineer
+Information Security Engineer
+Business Development Manager
+Mobile Engineer
+Software Engineer
+Front End Engineer
+HR Manager
+Strategy Manager
+Salesforce Developer
+Automation Engineer
+Back End Engineer
+Machine Learning Engineer
+Product Marketing Manager
+Tax Manager
+Program Manager
+Solutions Engineer
+Cloud Engineer
+UX Designer
+Product Designer
+Clinical Nurse
+Clinic Manager
+Business Analyst
+Technical Program Manager
+Project Manager
+Construction Superintendent
+QA Engineer
+Data Analyst
+Realtor
+Attorney
+Operations Manager
+Scrum Master
+Technical Project Manager
+Tax Accountant
+Risk Manager
+Finance Manager
+Corporate Recruiter
+Customer Success Manager
+Environmental Scientist
+Rancher
+Fish and Game Warden
+Conservation Officer
+Fisher
+Food Scientist
+Technologist
+Geophysicist
+Landscaper
+Groundskeeper
+Logger
+Nursery Manager
+Greenhouse Manager
+Accounting Technician
+School Administrator
+Air Ambulance Doctor
+Air Ambulance Pilot
+Aircraft Engineer
+Alpine Ski Racer
+Ambulance Dispatcher
+Trainee Business Analyst
+App Developer
+Architectural Assistant
+Concept Artist
+Assistant Learning Officer
+Assistant Producer
+Assistant Producer, Radio
+Media Assistant
+Restaurant Assistant Manager
+Audio Engineer
+Digital Engagement Apprentice
+Events Assistant
+Biomedical Scientist
+Bird of Prey Specialist
+Broadcast Assistant
+Festival Build Manager
+Business Owner
+Business Development Intern
+Cake Designer
+Camera Assistant
+Carer
+Carpentry
+Catchment Officer
+Ceo
+Chocolatier
+Civil Engineer Technician
+Civil Engineering Apprentice
+Cleaner
+Clinical Photographer
+Coder
+Coding Events Manager
+Comedian
+Commissioning and Development Executive
+Communications Intern
+Community Education Coordinator
+Community Cohesion Officer
+Conservation Apprentice
+Apprentice Conservation Officer
+Conservation Trainee
+Construction Site Engineer
+Senior Content Executive
+Membership Coordinator in a Museum
+Copy Editor
+Coroner's Officer
+Corporate Social Responsibility Coordinator
+Costume Standby on Fantastic Beasts
+Cosmetics Creator
+Junior Creative
+Senior Creative
+Crèche Assistant
+Customer Service Team Manager
+Cyber Security Apprentice
+Dance Choreographer
+Data and Compliance Manager
+Dental Lab Assistant
+Dental Nurse Assistant
+Handbag Designer
+Jewellery Designer
+Apprentice Wing Designer
+User Experience Designer
+Development Assistant
+Development Officer
+Digital Degree Apprentice
+Digital Content Producer
+Digital Marketing Exec
+Director in Fashion Wholesale
+Director in Photography
+Director for Sports TV
+Director at a Music Publisher
+Director at a Gaming Company
+Emergency Medical Dispatcher: Call Taker
+DJ and Presenter
+DJ Producer
+Drama Facilitator
+Festival Pr Director
+Festival Programme Director
+Graduate Ecologist
+Ecologist
+Content Editor
+Educational Support Officer
+Educational Wellbeing Specialist
+Emergency Medical Technician
+Engagement Manager
+Junior Simulation Engineer
+Sound Engineer
+Tendering Engineer
+Engineering Apprentice
+Electrical Engineer Apprentice
+Apprentice Engineer
+Formula 1 Engineer
+Senior System Engineer
+Entrepreneur: Clothing Manufacturer
+Estate Agent
+Farming Union Policy Advisor
+Farrier
+Field Technician
+Film Director
+Freelance Filmmaker
+Filmmaker, Sports
+Filmmaker
+Vlogger
+Financial Service Administrator
+Firefighter in London
+Firefighter in Wales
+Food Vlogger
+Foley Artist
+Football Coach
+Front of House Usher
+Fundraising Development Officer
+Games Designer
+Gaming Company Director
+Glass-Maker
+Globemaker
+Graphic Designer on Harry Potter
+Vlogger: Graphic Design
+Hairdresser: For People with Additional Needs
+Hairdresser Apprentice
+Horse Riding Instructor
+Humanitarian Worker
+Illustrator
+Vlogger: Illustrator
+Innovation Manager
+Intern Working on a Medical App
+Intern Working in Business Development
+Interpretation Officer
+Jewellery Maker
+Apprentice Joiner
+Apprentice Journalist
+Journalist: Correspondent
+Journalist: Associate Editor
+Journalist: Online Sports
+Journalist: Science
+Karate Instructor Trainee
+Kitchen Assistant
+Kitchenware Maker
+Knitwear Designer
+Landscape Assistant
+Speech and Language Therapist
+Lifeguard
+Lighting Director
+Lighting Technician
+Locations Manager
+Machine Operator
+Makeup Business Owner
+Make Up Lead: TV
+Management Accountant
+Production Manager
+Assistant Restaurant Manager
+Sales Performance Manager
+Streaming Manager
+Managing Director of a Start-Up Company
+Digital Marketing Specialist
+Digital Marketing Entrepreneur
+Marketing Intern
+Marketing and Communications Intern
+Marketing Executive
+Apprentice Mechanic
+Motorbike Mechanic
+Assistant Media Scheduler
+Medical Student:
+Medicine Management Technician
+Member of Youth Parliament
+Mental Health Nurse
+Mineral Technology Apprentice
+Mental Health Advocate
+Music Business Owner
+DJ
+Music Curator
+Music Editor
+Music Festival Volunteer
+Music Manager
+Music News Reporter
+Music Playlist Editor
+Music Photographer
+Music Pr Manager
+Music Promoter
+Music Supervisor
+Music Video Director
+Nanny
+Naval Architect
+News Editor: Online Sports
+News Reporter
+Nurse
+Critical Care Staff Nurse
+Orthopaedic Scrub Nurse
+Occupational Therapy Technical Instructor
+Apprentice Countryside Officer
+Online Entrepreneur in Beauty Retail
+Orthotist
+Outreach Officer at a Youth Club
+Outreach Officer in the Fire Service
+Outreach Pastor
+Paper Maker
+Paralegal Apprentice
+Community Specialist Paramedic
+Hart Paramedic
+Urgent Desk Care Paramedic
+Patient Support and Engagement Team Administrator
+Personal Trainer Pet Food Business Owner Pharmacist
+Pharmacologist
+Physiotherapist
+Pilot: Air Ambulance
+Poet
+Writer
+Politician
+Post-Production: Cgi
+Presenter
+Presenter: Radio
+Presenter: Radio and Live Events
+Presenter: Radio and Podcast
+Presenter: Sports
+Presenter: TV
+Presenter: TV and Radio
+Presenter and Youtuber
+Press Officer
+Primary Teacher
+Associate Producer
+Producer: Radio
+Producer: Podcast Commissioning
+Producer: Radio and Live Events
+Trainee Producer
+Production Assistant
+Product Designer and Entrepreneur
+Professional Gamer
+Prop Maker
+Prosthetic Makeup Artist
+Prosthetist
+Public Relations Account Assistant
+Pundit
+Apprentice Quantity Surveyor
+Therapeutic Radiographer
+Radio Presenter
+Radio Presenter and Producer
+Radio and Podcast Presenter
+Radio Producer
+Radio Visualisation
+Ramp Agent
+Rap Workshop Teacher and Youth Ambassador
+Recruitment Consultant
+Recruitment Apprentice
+Public Relations Officer
+Remote Vehicle Operator: Nuclear Site
+Research Scientist
+Phd Student
+Media Researcher
+Senior Researcher
+Science Student
+Researcher
+Senior Research Manager
+Restaurant Owner
+Science Apprentice
+Science Journalist
+Science Officer
+Screenwriter
+Secretary
+Zero Waste Shopkeeper
+Shop Shift Leader
+Singer-Songwriter Jade Bird
+Lewis Capaldi Singer-Songwriter
+Ski Racer
+Software Engineer Apprentice
+Solar Farm Manager
+Soldier
+Science Researcher
+Social Media Chef
+Junior Soldier
+Solicitor
+Strategist
+Festivals Stage Manager
+Steel Fabricator
+Stunt Performer
+Supervisor
+Support Worker
+Secondary Maths Teacher
+Teaching Assistant
+Horse Riding Teacher
+Tech Entrepreneur
+Technical Theatre Apprentice
+Creative Technologist
+Minerals Technology Apprentice
+Tennis Player
+Tour Manager
+Training Manager
+Tree Surgeon
+TV Presenter
+Twitter Curator
+Urgent Care Desk Paramedic
+Vet
+Veterinary Nurse
+Visual Effects Artist
+Volcano Vlogger
+Wardrobe Assistant
+Waste Warrior
+Wedding Dress Designer
+Craft Woodworker
+Writer: TV Comedy
+Freelance Writer
+Junior Copywriter
+Poet, Writer and Spoken Word Artist
+Youtuber: Gardening
+Youtuber and Presenter
+Zoologist: Graduate Ecologist
+Cardiac Sonographer
+Cardiovascular Invasive Specialist
+Cardiovascular Perfusionist
+Central Service Technician
+Child Life Specialist
+Dietitian
+Emergency Medicine Paramedic
+Health Information Manager
+Hemodialysis Technician
+Histology Technician
+Hospital Chaplain
+Medical Laboratory Scientist
+Medical Massage Therapist
+Medical Physicist
+Medical Social Worker
+Medical Speech-Language Pathologist
+Molecular Genetics Technologist
+Nurse Midwife
+Pathologists' Assistant
+Perioperative Nurse
+Phlebotomy Technician
+Positron Emission Tomography Technologist
+Surgical First Assistant
