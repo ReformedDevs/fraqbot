@@ -48,6 +48,12 @@ def test_get_job():
                     LEGO._get_job('abcdxyz987321')
                     )
             ) == 1
+    assert len(
+            re.findall(
+                '(No match for search term)',
+                LEGO._get_job('Cosmetologist')
+                )
+        ) == 0
 
 
 @patch('Legobot.Lego.Lego.reply')
