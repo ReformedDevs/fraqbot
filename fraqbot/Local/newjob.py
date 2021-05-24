@@ -1,6 +1,7 @@
 import logging
 import os
 import random
+import re
 import sys
 
 from Legobot.Lego import Lego
@@ -41,6 +42,31 @@ class NewJob(Lego):
                 (text.startswith('!job') or
                 text.startswith('!newjob')))
 
+    def _strip_and_parse_terms(self, term):
+        term_split = term.split(',')
+        if len(term_split) > 2:
+            term_split[2] = re.sub(
+                '^at ',
+                '',
+                term_split[2].strip()
+            )
+        term_zero_stripped = term_split[0].strip().lower()
+        return [
+            (term_zero_stripped),
+            (
+                term_split[1].strip().lower() if
+                (len(term_split) > 1 and
+                    len(term_split[1]) > 0)
+                else term_zero_stripped
+            ),
+            (
+                term_split[2].strip().lower() if
+                (len(term_split) > 2 and
+                    len(term_split[2]) > 0)
+                else term_zero_stripped
+            ),
+        ]
+
     def _get_job(self, term):
 
         found_role_modifiers = []
@@ -48,20 +74,23 @@ class NewJob(Lego):
         found_companies = []
 
         if term:
-            term_lowercase = term.lower()
+            search_terms_parsed = self._strip_and_parse_terms(term)
             found_role_modifiers = [
                     phrase for phrase in
-                    self.role_modifiers_list if term_lowercase in
+                    self.role_modifiers_list if
+                    search_terms_parsed[0] in
                     phrase.lower()
                 ]
             found_roles = [
                     phrase for phrase in
-                    self.roles_list if term_lowercase in
+                    self.roles_list if
+                    search_terms_parsed[1] in
                     phrase.lower()
                 ]
             found_companies = [
                     phrase for phrase in
-                    self.companies_list if term_lowercase in
+                    self.companies_list if
+                    search_terms_parsed[2] in
                     phrase.lower()
                 ]
 
@@ -98,7 +127,7 @@ class NewJob(Lego):
     def handle(self, message):
         logger.debug('Handling NewJob request: {}'.format(message['text']))
         text_split = message['text'].split(maxsplit=1)
-        term = text_split[1] if len(text_split) > 1 else None
+        term = text_split[1].strip() if len(text_split) > 1 else None
 
         new_job = self._get_job(term)
         opts = self.build_reply_opts(message)

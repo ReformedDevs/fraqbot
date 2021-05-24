@@ -41,6 +41,16 @@ def test_get_job():
     assert len(re.findall('Management', LEGO._get_job('Management'))) >= 5
     assert len(re.findall('Management', LEGO._get_job('MANAGEMENT'))) >= 5
     assert len(re.findall('Management', LEGO._get_job('management'))) >= 5
+    # multi search functionality
+    assert len(re.findall(
+            '^Lead Farmer at Mercedes-Benz U.S. International',
+            LEGO._get_job('Lead, Farmer, Mercedes-Benz U.S. International')
+    )) == 1
+    # strips " at " if present on multi search
+    assert len(re.findall(
+            '^Lead Farmer at Mercedes-Benz U.S. International',
+            LEGO._get_job('Lead, Farmer, at Mercedes-Benz U.S. International')
+    )) == 1
     # No match reply text
     assert len(
                 re.findall(
