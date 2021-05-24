@@ -335,11 +335,6 @@ Health Specialties Teacher
 Healthcare Support Worker
 Hearing Aid Specialist
 Helper
-Helpers--Carpenter
-Helpers--Electrician
-Helpers--Extraction Worker
-Helpers--Production Worker
-Helpers--Roofer
 Highway Maintenance Worker
 Highway Patrol Pilot
 Historian

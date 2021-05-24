@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import threading
 
@@ -34,6 +35,25 @@ def test_listening_for():
 def test_get_job():
     assert isinstance(LEGO._get_job(''), str)
     assert isinstance(LEGO._get_job('developer'), str)
+    assert isinstance(LEGO._get_job('Mercedes-Benz U.S. International'), str)
+    assert 'Dreamland Bar-B-Que' in LEGO._get_job('Dreamland Bar-B-Que')
+    # 5 instances (modifier, role, company, link, link text)
+    assert len(re.findall('Management', LEGO._get_job('Management'))) >= 5
+    assert len(re.findall('Management', LEGO._get_job('MANAGEMENT'))) >= 5
+    assert len(re.findall('Management', LEGO._get_job('management'))) >= 5
+    # No match reply text
+    assert len(
+                re.findall(
+                    '(No match for search term)',
+                    LEGO._get_job('abcdxyz987321')
+                    )
+            ) == 1
+    assert len(
+                re.findall(
+                    '(No match for search term)',
+                    LEGO._get_job('Cosmetologist')
+                    )
+            ) == 0
 
 
 @patch('Legobot.Lego.Lego.reply')

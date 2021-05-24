@@ -21,7 +21,6 @@ Supplemental
 Primary
 Secondary
 Tertiary
-Forgotten
 Basement-Dwelling
 Work From Home
 Resourceful
@@ -37,3 +36,24 @@ Poorly-Paid
 Unpaid
 Intern
 In-Training
+Freelance
+Traveling
+Full-Time
+Part-Time
+Occasional
+Seasonal
+Former
+Overworked
+Underworked
+Overpaid
+Underpaid
+Future
+Sole
+Exclusive
+Beginner
+Self-Taught
+Self-Made
+Highly Educated
+Poorly Educated
+Highly Skilled
+Low-Skilled
