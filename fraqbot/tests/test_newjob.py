@@ -41,6 +41,13 @@ def test_get_job():
     assert len(re.findall('Management', LEGO._get_job('Management'))) >= 5
     assert len(re.findall('Management', LEGO._get_job('MANAGEMENT'))) >= 5
     assert len(re.findall('Management', LEGO._get_job('management'))) >= 5
+    # No match reply text
+    assert len(
+                re.findall(
+                    '(No match for search term)',
+                    LEGO._get_job('abcdxyz987321')
+                    )
+            ) == 1
 
 
 @patch('Legobot.Lego.Lego.reply')
