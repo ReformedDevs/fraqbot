@@ -56,13 +56,13 @@ class NewJob(Lego):
             (
                 term_split[1].strip().lower() if
                 (len(term_split) > 1 and
-                    len(term_split[1]) > 0)
+                    len(term_split[1].strip()) > 0)
                 else term_zero_stripped
             ),
             (
                 term_split[2].strip().lower() if
                 (len(term_split) > 2 and
-                    len(term_split[2]) > 0)
+                    len(term_split[2].strip()) > 0)
                 else term_zero_stripped
             ),
         ]
