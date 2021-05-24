@@ -49,11 +49,11 @@ def test_get_job():
                     )
             ) == 1
     assert len(
-            re.findall(
-                '(No match for search term)',
-                LEGO._get_job('Cosmetologist')
-                )
-        ) == 0
+                re.findall(
+                    '(No match for search term)',
+                    LEGO._get_job('Cosmetologist')
+                    )
+            ) == 0
 
 
 @patch('Legobot.Lego.Lego.reply')
