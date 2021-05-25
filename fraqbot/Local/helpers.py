@@ -67,6 +67,33 @@ def write_file(path, data, f_type=None):
         return None
 
 
+def call_slack_api(client, method, get_all, transform, **kwargs):
+    out = []
+    total_limit = kwargs.pop('total_limit', 3000)
+
+    while True:
+        data = client.api_call(method, **kwargs)
+        if not data:
+            break
+
+        if not get_all:
+            out = jsearch(transform, data) if transform else None
+            break
+
+        temp = jsearch(transform, data)
+        if not temp:
+            break
+
+        out += temp
+        next_cursor = jsearch('response_metadata.next_cursor', data)
+        if not next_cursor or len(out) >= total_limit:
+            break
+
+        kwargs['cursor'] = next_cursor
+
+    return out
+
+
 def call_rest_api(caller, method, url, payload=None, convert_payload=None,
                   headers=None, params=None, response=None, default=None):
     method_map = {
@@ -191,6 +218,10 @@ class CustomFunctions(functions.Functions):
             return val1
         else:
             return val2
+
+    @functions.signature({'types': ['string']})
+    def _func_lower(self, value):
+        return value.lower()
 
 
 def jsearch(transform, data):
