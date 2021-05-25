@@ -51,6 +51,12 @@ def test_get_job():
             '^Lead Farmer at Mercedes-Benz U.S. International',
             LEGO._get_job('Lead, Farmer, at Mercedes-Benz U.S. International')
     )) == 1
+    # strips whitespace
+    assert len(re.findall(
+            '^Lead Farmer at Mercedes-Benz U.S. International',
+            LEGO._get_job(' Lead ,      Farmer   ,' +
+                          '   at      Mercedes-Benz U.S. International')
+    )) == 1
     # No match reply text
     assert len(
                 re.findall(

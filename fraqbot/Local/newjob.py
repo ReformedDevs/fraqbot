@@ -43,27 +43,26 @@ class NewJob(Lego):
                 text.startswith('!newjob')))
 
     def _strip_and_parse_terms(self, term):
-        term_split = term.split(',')
+        term_split = [
+            t.lower().strip() for t in
+            term.split(',') if len(t.strip()) > 0
+        ]
         if len(term_split) > 2:
             term_split[2] = re.sub(
-                '^at ',
+                '^at',
                 '',
-                term_split[2].strip()
-            )
-        term_zero_stripped = term_split[0].strip().lower()
+                term_split[2]).strip()
         return [
-            (term_zero_stripped),
+            (term_split[0]),
             (
-                term_split[1].strip().lower() if
-                (len(term_split) > 1 and
-                    len(term_split[1].strip()) > 0)
-                else term_zero_stripped
+                term_split[1] if
+                (len(term_split) > 1)
+                else term_split[0]
             ),
             (
-                term_split[2].strip().lower() if
-                (len(term_split) > 2 and
-                    len(term_split[2].strip()) > 0)
-                else term_zero_stripped
+                term_split[2] if
+                (len(term_split) > 2)
+                else term_split[0]
             ),
         ]
 
