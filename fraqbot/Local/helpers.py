@@ -9,6 +9,7 @@ import jmespath
 from jmespath import functions
 from jsonschema import validate
 import requests
+from tabulate import tabulate
 import yaml
 
 
@@ -64,6 +65,33 @@ def write_file(path, data, f_type=None):
     except Exception as e:
         LOGGER.error(e)
         return None
+
+
+def call_slack_api(client, method, get_all, transform, **kwargs):
+    out = []
+    total_limit = kwargs.pop('total_limit', 3000)
+
+    while True:
+        data = client.api_call(method, **kwargs)
+        if not data:
+            break
+
+        if not get_all:
+            out = jsearch(transform, data) if transform else None
+            break
+
+        temp = jsearch(transform, data)
+        if not temp:
+            break
+
+        out += temp
+        next_cursor = jsearch('response_metadata.next_cursor', data)
+        if not next_cursor or len(out) >= total_limit:
+            break
+
+        kwargs['cursor'] = next_cursor
+
+    return out
 
 
 def call_rest_api(caller, method, url, payload=None, convert_payload=None,
@@ -179,6 +207,22 @@ class CustomFunctions(functions.Functions):
 
         return data
 
+    @functions.signature(
+        {'types': ['boolean', 'array', 'object', 'null', 'string',
+                   'number', 'expref']},
+        {'types': ['boolean', 'array', 'object', 'null', 'string',
+                   'number', 'expref']},
+        {'types': ['boolean']})
+    def _func_val_or_val(self, val1, val2, condition):
+        if condition:
+            return val1
+        else:
+            return val2
+
+    @functions.signature({'types': ['string']})
+    def _func_lower(self, value):
+        return value.lower()
+
 
 def jsearch(transform, data):
     return jmespath.search(
@@ -268,3 +312,57 @@ def validate_schema(data, schema=None, schema_file=None, raise_ex=False):
             LOGGER.error(msg)
 
     return out
+
+
+def tabulate_data(data, _map, fields=None, user_id_field=None, thread=None):
+    if not fields or not isinstance(fields, (list, str)):
+        fields = sorted(list(set([
+            k for d in data
+            for k in d.keys()
+        ])))
+
+    if isinstance(fields, str):
+        fields = sorted([f.strip() for f in fields.split(',')])
+
+    user_replace = user_id_field and thread and user_id_field in fields
+    idx = fields.index(user_id_field) if user_replace else 0
+    new_data = []
+
+    for d in data:
+        record = []
+        for field in fields:
+            record.append(d.get(field, ''))
+            if user_replace and field == user_id_field:
+                name = thread.get_user_name_by_id(record[-1], True)
+                record.append(name if name else None)
+
+        if user_replace:
+            if record[idx + 1]:
+                new_data.append(record)
+
+        else:
+            new_data.append(record)
+
+    if user_replace:
+        table_data = [
+            [
+                '@{}'.format(d[idx + 1]) if i == idx else item
+                for i, item in enumerate(d)
+                if i != idx + 1
+            ]
+            for d in new_data
+        ]
+
+    mapped_fields = [_map.get(f, f) for f in fields]
+
+    out = tabulate(
+        [mapped_fields] + table_data, headers='firstrow', tablefmt='github')
+
+    if user_replace:
+        for d in new_data:
+            out = out.replace(
+                '@{}'.format(d[idx + 1]),
+                '<@{}>'.format(d[idx])
+            )
+
+    return f'```{out}```'

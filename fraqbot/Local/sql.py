@@ -103,16 +103,32 @@ class Table(object):
         if not _filter:
             return query
 
-        args = [
-            getattr(self.table, key).__eq__(value)
-            for key, value in _filter.items()
-            if key in self.fields
-        ]
-        self.errors += [
-            f'{f} is not a valid field for filtering.'
-            for f in _filter.keys()
-            if f not in self.fields
-        ]
+        def add_args(_filter, args=None, key=None):
+            if not args:
+                args = []
+
+            column = getattr(self.table, key) if key else None
+            if key and key not in self.fields:
+                self.errors.append(
+                    f'{key} is not a valid field for filtering.')
+
+                return args
+
+            if isinstance(_filter, dict):
+                if not key:
+                    for k, v in _filter.items():
+                        _key = k[:-4] if k.endswith('__op') else k
+                        args = add_args(v, args, _key)
+                else:
+                    for k, v in _filter.items():
+                        args.append(getattr(column.comparator, k)(v))
+
+            else:
+                args.append(getattr(column.comparator, '__eq__')(_filter))
+
+            return args
+
+        args = add_args(_filter)
 
         return query.filter(*args)
 
