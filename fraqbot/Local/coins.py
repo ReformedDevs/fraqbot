@@ -239,6 +239,10 @@ class CoinsPoolManager(CoinsBase):
 
         self._init_escrow()
         self.next_pool = self._get_next_pool()
+        self.common_words = h.load_file(
+            os.path.join(
+                LOCAL_DIR, 'lists', 'common_words.txt'), raw=True).splitlines()
+        self._set_secret_word()
         self._update_pool()
 
     # Init Methods
@@ -287,6 +291,65 @@ class CoinsPoolManager(CoinsBase):
         return (f'Next fill up and disbursement in {til_next}')
 
     # Action Methods
+    def _generate_secret_word(self):
+        fillups = self.db.pool_history.query(
+            limit=2, sort='id,desc', fields='fillup_ts')
+        fillups = h.jsearch('[].fillup_ts', fillups)
+
+        users = self.db.balance.query(
+            limit=10,
+            sort='balance,asc',
+            fields='user',
+            _filter={'user__op': {
+                'startswith': 'U', 'notin_': self.pool_excludes}}
+        )
+        users = h.jsearch('[].user', users)
+        channels = [
+            self.botThread.get_channel_id_by_name('general'),
+            self.botThread.get_channel_id_by_name('random')
+        ]
+        messages = []
+
+        for channel in channels:
+            messages += h.call_slack_api(
+                self.botThread.slack_client,
+                'conversations.history',
+                True,
+                'messages',
+                total_limit=10000,
+                limit=1000,
+                latest=fillups[0],
+                olders=fillups[1],
+                channel=channel
+            )
+
+        user_search = ('[?contains([{}], user) '
+                       '&& !contains(lower(text), `moin`) '
+                       '&& !starts_with(text, `!ak`)]').format(
+            ', '.join([f'`{u}`' for u in users])
+        )
+        messages = h.jsearch(user_search, messages)
+        word_pool = {}
+
+        for message in messages:
+            user = message['user']
+            if user not in word_pool:
+                word_pool[user] = []
+
+            word_pool[user] += re.findall(r':[a-zA-Z0-9_-]+:', message['text'])
+            string = re.sub(
+                r'(:[a-zA-Z0-9_-]+:)|(<@U[A-Z0-9]+>)', '', message['text'])
+            words = re.findall(r'\b\w+\b', string)
+            word_pool[user] += [
+                w.lower() for w in words
+                if len(w) > 3
+                and w.lower() not in self.common_words
+            ]
+
+        user = choice(list(word_pool.keys()))
+        word = choice(word_pool[user])
+        return word, user
+
     def _get_next_pool(self):
         next_pool = self.db.pool_history.query(
             limit=1, sort='id,desc', return_field_value='next_fillup_ts')
@@ -311,6 +374,24 @@ class CoinsPoolManager(CoinsBase):
 
         return ', '.join(out)
 
+    def _set_secret_word(self):
+        pool_id = self.db.pool_history.query(
+            limit=1, sort='id,desc', return_field_value='id')
+        pool_id = pool_id if pool_id else 1
+        record = self.db.secret_word.query(limit=1, _filter={'id': pool_id})
+
+        if record:
+            self.secret_word = record['secret_word']
+        else:
+            word, user = self._generate_secret_word()
+            self.db.secret_word.upsert({
+                'id': pool_id,
+                'ts': h.now(),
+                'secret_word': word,
+                'source_user': user
+            })
+            self.secret_word = word
+
     def _update_pool(self):
         _now = h.now()
         if self.next_pool <= _now:
@@ -327,19 +408,26 @@ class CoinsPoolManager(CoinsBase):
                         'amount': amt
                     })
 
+            self._set_secret_word()
+
 
 class CoinsMiner(CoinsBase):
     def __init__(self, baseplate, lock, *args, **kwargs):
         super().__init__(baseplate, lock, **kwargs)
 
-        self.moined = self._load_moined()
+        self.moined = self._load('moined')
+        self.sw_mined = self._load('sw_mined')
         self.next_pool = self._get_next_pool()
         self.pool_id = self._get_escrow_pool_id()
+        self.secret_word = self._get_secret_word()
 
     # Std Methods
     def listening_for(self, message):
         if h.now() > self.next_pool:
             self._reset(message)
+
+        if not self.secret_word and h.now() - self.gsw_ts > 120:
+            self.secret_word = self._get_secret_word()
 
         _handle = False
         text = message.get('text')
@@ -348,32 +436,49 @@ class CoinsMiner(CoinsBase):
         if (
             isinstance(text, str)
             and user
-            and user not in self.moined
             and user not in self.pool_excludes
         ):
-            _handle = 'moin' in text.lower()
+            _handle = (
+                ('moin' in text.lower() and user not in self.moined)
+                or (self.secret_word in text.lower()
+                    and user not in self.sw_mined)
+            )
 
         return _handle
 
     # Handler Methods
     def handle(self, message):
-        moiner = message['metadata']['source_user']
-        self._mine(moiner)
+        miner = message['metadata']['source_user']
+        if 'moin' in message['text'].lower():
+            self._mine(miner, 'moined')
+
+        if self.secret_word in message['text'].lower():
+            self._mine(miner, 'sw_mined')
 
     def _format_disburse(self, payment):
         response = None
-        moiner = payment['payee_id']
+        miner = payment['payee_id']
         amount = payment['amount']
-        paid = self._pay(
-            'escrow', moiner, amount, 'Happy Moin!')
+
+        if payment['memo'].startswith('Moin'):
+            memo = 'Happy Moin!'
+            _type = 'Moin'
+        elif payment['memo'].startswith('Secret Word'):
+            memo = 'You guessed the secret word!'
+            _type = 'Secret Word'
+        else:
+            memo = ''
+            _type = ''
+
+        paid = self._pay('escrow', miner, amount, memo)
         if paid:
-            response = (f'- <@{moiner}> received {amount} {self.name} from '
-                        'the Pool.')
+            response = (f'- <@{miner}> received {amount} {self.name} from '
+                        f'the Pool for {_type}.')
 
         return response
 
     # Action Methods
-    def _disburse_from_escrow(self, message, escrow_group_id):
+    def _disburse_from_escrow(self, message, escrow_group_id, secret_word):
         payments = self.db.escrow.query(
             _filter={'escrow_group_id': escrow_group_id}, sort='id,asc')
         responses = []
@@ -384,9 +489,12 @@ class CoinsMiner(CoinsBase):
                 responses.append(response)
 
         if responses:
-            msg = 'During the last pool period:```{}```\nHappy Moin!'.format(
-                '\n'.join(responses))
-            channel = self.botThread.get_channel_id_by_name('general')
+            msg = ('*{} Mining Report*\n'
+                   'During the last pool period:```{}```\n'
+                   'The Secret word was `{}`.\n\n'
+                   'Happy Mining!').format(
+                self.name, '\n'.join(responses), secret_word)
+            channel = self.botThread.get_channel_id_by_name('bot-temp')
             if channel:
                 self.botThread.slack_client.api_call(
                     'chat.postMessage',
@@ -413,6 +521,20 @@ class CoinsMiner(CoinsBase):
     def _get_next_pool(self):
         return self._get_last_pool_item('next_fillup_ts', 0)
 
+    def _get_secret_word(self):
+        word = self.db.secret_word.get(
+            self.pool_id, return_field_value='secret_word')
+        self.gsw_ts = h.now()
+
+        return word
+
+    def _load(self, prop):
+        path = os.path.join(self.tx_dir, f'{prop}.json')
+        if os.path.isfile(path):
+            return h.load_file(path)
+
+        return []
+
     def _load_moined(self):
         path = os.path.join(self.tx_dir, 'moined.json')
         if os.path.isfile(path):
@@ -420,11 +542,14 @@ class CoinsMiner(CoinsBase):
 
         return []
 
-    def _mine(self, moiner):
-        if moiner not in self.moined:
-            self.moined.append(moiner)
-            self._write_moined()
-            if not choice(CHOICES):
+    def _mine(self, miner, prop):
+        mined = getattr(self, prop)
+        if miner not in mined:
+            mined.append(miner)
+            setattr(self, prop, mined)
+            self._write(prop)
+
+            if prop == 'moined' and not choice(CHOICES):
                 return None
 
             pool_balance = self._get_balance('pool')
@@ -446,32 +571,38 @@ class CoinsMiner(CoinsBase):
             if opts and pool_balance and divvy:
                 divvy = divvy // 2 + 1 if divvy >= 3 else 2
                 amt = randint(2, divvy) * divisor
-                self._to_escrow(moiner, amt)
+                self._to_escrow(miner, amt, prop)
 
         return None
 
     def _reset(self, message):
         self.next_pool = self._get_next_pool()
-        self._disburse_from_escrow(message, self.pool_id)
+        self._disburse_from_escrow(message, self.pool_id, self.secret_word)
         self.pool_id = self._get_escrow_pool_id()
+        self.secret_word = self._get_secret_word()
         self.moined = []
-        self._write_moined()
+        self._write('moined')
+        self.sw_mined = []
+        self._write('sw_mined')
 
-    def _to_escrow(self, moiner, amt):
-        tx_msg = (f'Mining for {moiner}. Escrow group id: {self.pool_id}')
+    def _to_escrow(self, miner, amt, prop):
+        m_type = 'Secret Word' if prop == 'sw_mined' else 'Moin'
+        tx_msg = (f'{m_type} Mining for {miner}. '
+                  f'Escrow group id: {self.pool_id}')
+
         if self._pay('pool', 'escrow', amt, tx_msg):
             self.db.escrow.upsert({
                 'escrow_group_id': self.pool_id,
                 'tx_timestamp': h.now(),
                 'payer_id': 'pool',
-                'payee_id': moiner,
+                'payee_id': miner,
                 'amount': amt,
                 'memo': tx_msg
             })
 
-    def _write_moined(self):
-        path = os.path.join(self.tx_dir, 'moined.json')
-        h.write_file(path, self.moined, 'json')
+    def _write(self, prop):
+        path = os.path.join(self.tx_dir, f'{prop}.json')
+        h.write_file(path, getattr(self, prop), 'json')
 
 
 class CoinsAdmin(CoinsBase):
