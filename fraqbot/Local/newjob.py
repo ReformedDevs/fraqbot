@@ -53,17 +53,16 @@ class NewJob(Lego):
                 '',
                 term_split[2]).strip()
         return [
-            (term_split[0]),
-            (
-                term_split[1] if
-                (len(term_split) > 1)
-                else term_split[0]
-            ),
-            (
-                term_split[2] if
-                (len(term_split) > 2)
-                else term_split[0]
-            ),
+            # Role Modifier search term
+            term_split[0],
+            # Role search term
+            term_split[1] if
+            (len(term_split) > 1)
+            else term_split[0],
+            # Company search term
+            term_split[2] if
+            (len(term_split) > 2)
+            else term_split[0],
         ]
 
     def _get_job(self, term):
