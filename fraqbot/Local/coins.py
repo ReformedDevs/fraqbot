@@ -675,8 +675,8 @@ class CoinsAdmin(CoinsBase):
 
         if escrow:
             escrow = h.jsearch(
-                ('[].{payee_id: payee_id, amount: amount, memo: val_or_val'
-                 '(`Moin`, memo, contains(memo, `Mining`))}'),
+                ('[].{payee_id: payee_id, amount: amount, memo: split_items'
+                 '(memo, `Mining`, `1`)}'),
                 escrow
             )
             table = h.tabulate_data(
