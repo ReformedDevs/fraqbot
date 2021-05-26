@@ -242,6 +242,10 @@ class CoinsPoolManager(CoinsBase):
         self.common_words = h.load_file(
             os.path.join(
                 LOCAL_DIR, 'lists', 'common_words.txt'), raw=True).splitlines()
+        self.secret_word_channels = [
+            self.botThread.get_channel_id_by_name(channel)
+            for channel in kwargs.get('secret_word_channels', ['general'])
+        ]
         self._set_secret_word()
         self._update_pool()
 
@@ -304,13 +308,9 @@ class CoinsPoolManager(CoinsBase):
                 'startswith': 'U', 'notin_': self.pool_excludes}}
         )
         users = h.jsearch('[].user', users)
-        channels = [
-            self.botThread.get_channel_id_by_name('general'),
-            self.botThread.get_channel_id_by_name('random')
-        ]
         messages = []
 
-        for channel in channels:
+        for channel in self.secret_word_channels:
             messages += h.call_slack_api(
                 self.botThread.slack_client,
                 'conversations.history',
