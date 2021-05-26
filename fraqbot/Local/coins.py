@@ -421,6 +421,14 @@ class CoinsMiner(CoinsBase):
         self.next_pool = self._get_next_pool()
         self.pool_id = self._get_escrow_pool_id()
         self.secret_word = self._get_secret_word()
+        self.secret_word_channels = [
+            self.botThread.get_channel_id_by_name(channel)
+            for channel in kwargs.get('secret_word_channels', ['general'])
+        ]
+        self.disbursement_channels = [
+            self.botThread.get_channel_id_by_name(channel)
+            for channel in kwargs.get('disbursement_channels', ['general'])
+        ]
 
     # Std Methods
     def listening_for(self, message):
@@ -495,8 +503,8 @@ class CoinsMiner(CoinsBase):
                    'The Secret word was `{}`.\n\n'
                    'Happy Mining!').format(
                 self.name, '\n'.join(responses), secret_word)
-            channel = self.botThread.get_channel_id_by_name('general')
-            if channel:
+
+            for channel in self.disbursement_channels:
                 self.botThread.slack_client.api_call(
                     'chat.postMessage',
                     as_user=True,
