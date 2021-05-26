@@ -494,7 +494,7 @@ class CoinsMiner(CoinsBase):
                    'The Secret word was `{}`.\n\n'
                    'Happy Mining!').format(
                 self.name, '\n'.join(responses), secret_word)
-            channel = self.botThread.get_channel_id_by_name('bot-temp')
+            channel = self.botThread.get_channel_id_by_name('general')
             if channel:
                 self.botThread.slack_client.api_call(
                     'chat.postMessage',
