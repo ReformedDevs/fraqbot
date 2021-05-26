@@ -346,7 +346,15 @@ class CoinsPoolManager(CoinsBase):
                 and w.lower() not in self.common_words
             ]
 
-        user = choice(list(word_pool.keys()))
+        word_pool_sorted = dict(sorted(
+                                    word_pool.items(),
+                                    key=lambda item: len(item[1]),
+                                    reverse=True
+                                    ))
+
+        user_list = list(word_pool_sorted.keys())[0:5]
+
+        user = choice(user_list)
         word = choice(word_pool[user])
         return word, user
 
