@@ -346,7 +346,8 @@ class CoinsPoolManager(CoinsBase):
                 and w.lower() not in self.common_words
             ]
 
-        user = choice(list(word_pool.keys()))
+        users = [k for k in word_pool.keys() if word_pool[k]]
+        user = choice(users)
         word = choice(word_pool[user])
         return word, user
 
