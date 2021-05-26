@@ -1,6 +1,7 @@
 import logging
 import os
 import random
+import re
 import sys
 
 from Legobot.Lego import Lego
@@ -41,38 +42,46 @@ class NewJob(Lego):
                 (text.startswith('!job') or
                 text.startswith('!newjob')))
 
+    def _strip_and_parse_terms(self, term):
+        term_split = [
+            t.lower().strip() for t in
+            term.split(',') if len(t.strip()) > 0
+        ]
+        if len(term_split) > 2:
+            term_split[2] = re.sub('^at', '', term_split[2]).strip()
+        return [
+            # Role Modifier search term
+            term_split[0],
+            # Role search term
+            term_split[1] if len(term_split) > 1 else term_split[0],
+            # Company search term
+            term_split[2] if len(term_split) > 2 else term_split[0],
+        ]
+
+    def _search_list(self, listname, term):
+        return [string for string in getattr(self, f'{listname}_list') if
+                term in string.lower()]
+
     def _get_job(self, term):
 
-        found_role_modifiers = []
+        found_mods = []
         found_roles = []
         found_companies = []
 
         if term:
-            term_lowercase = term.lower()
-            found_role_modifiers = [
-                    phrase for phrase in
-                    self.role_modifiers_list if term_lowercase in
-                    phrase.lower()
-                ]
-            found_roles = [
-                    phrase for phrase in
-                    self.roles_list if term_lowercase in
-                    phrase.lower()
-                ]
-            found_companies = [
-                    phrase for phrase in
-                    self.companies_list if term_lowercase in
-                    phrase.lower()
-                ]
+            terms_parsed = self._strip_and_parse_terms(term)
+            found_mods = self._search_list('role_modifiers', terms_parsed[0])
+            found_roles = self._search_list('roles', terms_parsed[1])
+            found_companies = self._search_list('companies', terms_parsed[2])
 
         extra_text = ('\n\n(No match for search term)'
                       if (term and
-                          (not found_role_modifiers and
+                          (not found_mods and
                            not found_roles and
                            not found_companies)) else '')
 
-        if not found_role_modifiers:
-            found_role_modifiers = self.role_modifiers_list
+        if not found_mods:
+            found_mods = self.role_modifiers_list
         if not found_roles:
             found_roles = self.roles_list
         if not found_companies:
@@ -81,7 +90,7 @@ class NewJob(Lego):
         random_company = random.choice(found_companies)
 
         final_string = ' '.join([
-            random.choice(found_role_modifiers),
+            random.choice(found_mods),
             random.choice(found_roles),
             'at',
             ('{} (<https://en.wikipedia.org/wiki/{}' +
@@ -98,7 +107,7 @@ class NewJob(Lego):
     def handle(self, message):
         logger.debug('Handling NewJob request: {}'.format(message['text']))
         text_split = message['text'].split(maxsplit=1)
-        term = text_split[1] if len(text_split) > 1 else None
+        term = text_split[1].strip() if len(text_split) > 1 else None
 
         new_job = self._get_job(term)
         opts = self.build_reply_opts(message)
