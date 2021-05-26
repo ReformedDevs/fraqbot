@@ -242,6 +242,10 @@ class CoinsPoolManager(CoinsBase):
         self.common_words = h.load_file(
             os.path.join(
                 LOCAL_DIR, 'lists', 'common_words.txt'), raw=True).splitlines()
+        self.secret_word_channels = [
+            self.botThread.get_channel_id_by_name(channel)
+            for channel in kwargs.get('secret_word_channels', ['general'])
+        ]
         self._set_secret_word()
         self._update_pool()
 
@@ -304,13 +308,9 @@ class CoinsPoolManager(CoinsBase):
                 'startswith': 'U', 'notin_': self.pool_excludes}}
         )
         users = h.jsearch('[].user', users)
-        channels = [
-            self.botThread.get_channel_id_by_name('general'),
-            self.botThread.get_channel_id_by_name('random')
-        ]
         messages = []
 
-        for channel in channels:
+        for channel in self.secret_word_channels:
             messages += h.call_slack_api(
                 self.botThread.slack_client,
                 'conversations.history',
@@ -346,7 +346,8 @@ class CoinsPoolManager(CoinsBase):
                 and w.lower() not in self.common_words
             ]
 
-        user = choice(list(word_pool.keys()))
+        users = [k for k in word_pool.keys() if word_pool[k]]
+        user = choice(users)
         word = choice(word_pool[user])
         return word, user
 
@@ -420,6 +421,14 @@ class CoinsMiner(CoinsBase):
         self.next_pool = self._get_next_pool()
         self.pool_id = self._get_escrow_pool_id()
         self.secret_word = self._get_secret_word()
+        self.secret_word_channels = [
+            self.botThread.get_channel_id_by_name(channel)
+            for channel in kwargs.get('secret_word_channels', ['general'])
+        ]
+        self.disbursement_channels = [
+            self.botThread.get_channel_id_by_name(channel)
+            for channel in kwargs.get('disbursement_channels', ['general'])
+        ]
 
     # Std Methods
     def listening_for(self, message):
@@ -432,16 +441,19 @@ class CoinsMiner(CoinsBase):
         _handle = False
         text = message.get('text')
         user = message.get('metadata', {}).get('source_user')
+        channel = message.get('metadata', {}).get('source_channel')
 
         if (
             isinstance(text, str)
             and user
             and user not in self.pool_excludes
+            and channel
         ):
             _handle = (
                 ('moin' in text.lower() and user not in self.moined)
                 or (self.secret_word in text.lower()
-                    and user not in self.sw_mined)
+                    and user not in self.sw_mined
+                    and channel in self.secret_word_channels)
             )
 
         return _handle
@@ -494,8 +506,8 @@ class CoinsMiner(CoinsBase):
                    'The Secret word was `{}`.\n\n'
                    'Happy Mining!').format(
                 self.name, '\n'.join(responses), secret_word)
-            channel = self.botThread.get_channel_id_by_name('general')
-            if channel:
+
+            for channel in self.disbursement_channels:
                 self.botThread.slack_client.api_call(
                     'chat.postMessage',
                     as_user=True,
