@@ -223,7 +223,10 @@ class CustomFunctions(functions.Functions):
     def _func_lower(self, value):
         return value.lower()
 
-    @functions.signature({'types': ['string']}, {'types': ['string']}, {'types': ['number']})
+    @functions.signature(
+        {'types': ['string']},
+        {'types': ['string']},
+        {'types': ['number']})
     def _func_split_items(self, value, _split, count):
         if count < 1:
             return value
