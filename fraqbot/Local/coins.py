@@ -346,8 +346,13 @@ class CoinsPoolManager(CoinsBase):
                 and w.lower() not in self.common_words
             ]
 
+        word_pool_items_filtered = [
+            item for item in
+            word_pool.items() if
+            len(item[1]) > 0]
+
         word_pool_sorted = dict(sorted(
-                                    word_pool.items(),
+                                    word_pool_items_filtered,
                                     key=lambda item: len(item[1]),
                                     reverse=True
                                     ))
