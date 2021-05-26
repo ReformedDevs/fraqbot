@@ -441,16 +441,19 @@ class CoinsMiner(CoinsBase):
         _handle = False
         text = message.get('text')
         user = message.get('metadata', {}).get('source_user')
+        channel = message.get('metadata', {}).get('source_channel')
 
         if (
             isinstance(text, str)
             and user
             and user not in self.pool_excludes
+            and channel
         ):
             _handle = (
                 ('moin' in text.lower() and user not in self.moined)
                 or (self.secret_word in text.lower()
-                    and user not in self.sw_mined)
+                    and user not in self.sw_mined
+                    and channel in self.secret_word_channels)
             )
 
         return _handle
