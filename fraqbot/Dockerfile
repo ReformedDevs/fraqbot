@@ -15,4 +15,5 @@ WORKDIR /usr/src/app
 COPY requirements.txt ./
 RUN pip install -r ./requirements.txt
 COPY . .
+RUN mv prod-config.yaml config.yaml
 CMD python chatbot.py

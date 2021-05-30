@@ -5,7 +5,6 @@ redis-data/*
 config.ini
 config.yaml
 dev-config.yaml
-prod-config.yaml
 temp/
 venv/*
 .env
