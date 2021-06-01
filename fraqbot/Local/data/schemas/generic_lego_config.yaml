@@ -1,0 +1,203 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+title: Generic Lego Config
+description: A config for a generic (config-driven) lego
+type: object
+properties:
+  name:
+    type: string
+    description: The name of the Lego instance
+  help:
+    types:
+      - string
+      - 'null'
+    description: The help text to return from the get_help function
+  triggers:
+    type: object
+    patternProperties:
+      ^[a-z][a-z0-9_]+:
+      $ref: '#/$defs/trigger'
+    additionalProperties: false
+  responses:
+    type: object
+    patternProperties:
+      ^[a-z][a-z0-9_]+:
+      $ref: '#/$defs/response'
+    additionalProperties: false
+required:
+additionalProperties: true
+$defs:
+  trigger:
+    type: object
+    description: A config for a trigger
+    properties:
+      type:
+        type: string
+        enum:
+          - starts_with
+          - ends_with
+          - regex
+        description: The trigger type
+      text:
+        type: string
+        description: The text/regex expr to look for
+      ci:
+        type: boolean
+        description: Whether or not the search should be case insensitive. Defaults to false.
+      response:
+        type: string
+        description: The response config to use when this trigger is matched
+    required:
+      - type
+      - text
+      - response
+    additionalProperties: false
+  response:
+    type: object
+    description: A config for generating a response
+    oneOf:
+      - '#/$defs/responseSearch'
+      - '#/$defs/responseOther'
+  responseSearch:
+    type: object
+    description: A config for a search response
+    properties:
+      type:
+        type: string
+        description: The response type
+        enum:
+          - search
+      data:
+        oneOf:
+          - '#/$defs/responseData'
+          - '#/$defs/responseFile'
+          - '#/$defs/responseApi'
+      search:
+        $ref: '#/$defs/responseSearchConfig'
+    required:
+      - type
+      - data
+      - search
+    additionalProperties: false
+  responseOther:
+    type: object
+    description: A config for random or api response
+    properties:
+      type:
+        type: string
+        description: The response type
+        enum:
+          - api
+          - random
+      data:
+        oneOf:
+          - '#/$defs/responseData'
+          - '#/$defs/responseFile'
+          - '#/$defs/responseApi'
+    required:
+      - type
+      - data
+    additionalProperties: false
+  responseData:
+    type: object
+    description: A config for supplying data in the config itself.
+    properties:
+      data:
+        description: The actual data to use in the response type.
+      transform:
+        type: string
+        description: Optional jmespath expression to run on the data before executing the response type (random or search).
+    required:
+      - data
+    additionalProperties: false
+  responseFile:
+    type: object
+    description: A config for using a file as a data source
+    properties:
+      type:
+        type: string
+        description: The data source's file type. Plain text (text) files will be split on lines. Each line will be a data point.
+        enum:
+          - json
+          - yaml
+          - text
+      path:
+        type: string
+        description: The path to the data file. If the path starts with / it will be interpreted as absolute. Otherwise it is relative to the Lego python file.
+      transform:
+        type: string
+        description: Optional jmespath expression to run on the data before executing the response type (random or search).
+    required:
+      - type
+      - path
+    additionalProperties: false
+  responseApi:
+    type: object
+    description: A config for calling an HTTP API. If you wish to use the non trigger part of the message in the API call you can use ${message} in any of the string properties of this config.
+    properties:
+      method:
+        type: string
+        description: The http method to use. Defaults to get.
+        enum:
+          - get
+          - post
+          - put
+          - patch
+          - delete
+      url:
+        type: string
+        description: The full API URL
+      params:
+        type: object
+        description: URL parameters to include in the request.
+      headers:
+        type: object
+        description: Any headers to include in the API
+      payload:
+        description: Data to include in the request.
+      payload_type:
+        type: string
+        description: Dump the payload to a string representation of the payload_type. If not provided the payload will be sent uninterpreted from the config.
+        enum:
+          - json
+          - yaml
+      allowed_codes:
+        type: array
+        description: HTTP response codes that are considered valid for this API call. Defaults to [200]
+        items:
+          type: integer
+          minimum: 200
+          maximum: 599
+      response_type:
+        type: string
+        description: The responses data type. Used to load the response into native python types. Defaults to text (plain text response).
+        enum:
+          - json
+          - yaml
+          - text
+      transform:
+        type: string
+        description: Optional jmespath expression to transform the response.
+    required:
+      - url
+    additionalProperties: false
+  responseSearchConfig:
+    type: object
+    description: A search config. If you wish to use the non trigger part of the message in the search you can use ${message} in any of the string properties of this config.
+    properties:
+      type:
+        type: string
+        description: The search type.
+        enum:
+          - contains
+          - regex
+          - jmes
+      search:
+        type: string
+        description: The text of the search
+      ci:
+        type: boolean
+        description: Whether or not the search should be case insensitive. Defaults to false. (Irrelevant for jmespath searches.)
+    required:
+      - type
+      - search
+    additionalProperties: false

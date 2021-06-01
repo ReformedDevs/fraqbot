@@ -12,8 +12,8 @@ LOCAL_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)))
 if LOCAL_DIR not in sys.path:
     sys.path.append(LOCAL_DIR)
 
-from helpers import call_rest_api  # noqa 402
-from helpers import format_table  # noqa 402
+from helpers.utils import call_rest_api  # noqa 402
+from helpers.text import format_table  # noqa 402
 
 logger = logging.getLogger(__name__)
 TWOPLACES = Decimal(10) ** -2

@@ -20,4 +20,11 @@ legos:
         - "!shake"
       pool_excludes:
         - <a Slack bot ID> # Keeps fraqbot from getting paid from the pool.
+      properties:  # Array of attributes to set on the class using helpers.utils.set_properties
+        - name: insult_array
+          file:
+            path: 'data/lists/quotes.txt'
+            raw: true
+            split_lines: true
+            default: []
   

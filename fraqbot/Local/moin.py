@@ -9,7 +9,7 @@ LOCAL_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)))
 if LOCAL_DIR not in sys.path:
     sys.path.append(LOCAL_DIR)
 
-from helpers import call_rest_api  # noqa E402
+from helpers.utils import call_rest_api  # noqa E402
 
 
 logger = logging.getLogger(__name__)
