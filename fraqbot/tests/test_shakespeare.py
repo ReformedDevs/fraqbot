@@ -5,17 +5,32 @@ import threading
 from Legobot.Lego import Lego
 from mock import patch
 
+
 LOCAL_PATH = os.path.join(
     os.path.abspath(os.path.dirname(__file__)),
     '..',
     'Local'
 )
 sys.path.append(LOCAL_PATH)
+
+
 from shakespeare import Shakespeare  # noqa: E402
+
 
 LOCK = threading.Lock()
 BASEPLATE = Lego.start(None, LOCK)
-LEGO = Shakespeare(BASEPLATE, LOCK)
+PROPERTIES = [
+    {
+        'name': 'insult_array',
+        'file': {
+            'path': 'data/lists/quotes.txt',
+            'raw': True,
+            'split_lines': True,
+            'default': []
+        }
+    }
+]
+LEGO = Shakespeare(BASEPLATE, LOCK, properties=PROPERTIES)
 
 
 def test_listening_for():

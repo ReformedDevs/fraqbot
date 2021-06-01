@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import sys
 import time
 
 import jmespath
@@ -8,7 +9,13 @@ from jmespath import functions
 import requests
 import yaml
 
-from .file import load_file
+
+HELPERS_DIR = os.path.abspath(os.path.dirname(__file__))
+if HELPERS_DIR not in sys.path:
+    sys.path.append(HELPERS_DIR)
+
+
+from file import load_file  # noqa: E402
 
 
 LOGGER = logging.getLogger('helpers.utils')
@@ -104,7 +111,7 @@ class CustomFunctions(functions.Functions):
     @functions.signature({'types': ['string', 'null']})
     def _func_string_or_null(self, data):
         if isinstance(data, str):
-            if data.strip() == 'None':
+            if data.strip() in ['None', 'null']:
                 data = None
 
         return data
