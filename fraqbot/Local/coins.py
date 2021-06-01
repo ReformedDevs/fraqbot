@@ -13,8 +13,10 @@ from Legobot.Lego import Lego
 LOCAL_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)))
 sys.path.append(LOCAL_DIR)
 
-import helpers as h  # noqa: E402
-from sql import DB  # noqa: E402
+from helpers import file  # noqa: E402
+from helpers.sql import DB  # noqa: E402
+from helpers import text  # noqa: E402
+from helpers import utils  # noqa: E402
 
 
 LOGGER = logging.getLogger(__name__)
@@ -35,11 +37,11 @@ class CoinsBase(Lego):
 
         # set tx locations and load/initialize db
         tables = {}
-        table_dir = os.path.join(LOCAL_DIR, 'tables')
+        table_dir = os.path.join(LOCAL_DIR, 'data', 'tables')
         for _file in os.listdir(table_dir):
             path = os.path.join(table_dir, _file)
             if os.path.isfile(path):
-                tables.update(h.load_file(path))
+                tables.update(file.load_file(path))
 
         self._init_tx_db(tables, kwargs.get('seeds', {}))
 
@@ -124,7 +126,7 @@ class CoinsBase(Lego):
             'payee_id': dest,
             'amount': amount,
             'memo': memo,
-            'tx_timestamp': ts if ts else h.now()
+            'tx_timestamp': ts if ts else utils.now()
         }
 
         return self.db.transaction.upsert(data)
@@ -239,9 +241,10 @@ class CoinsPoolManager(CoinsBase):
 
         self._init_escrow()
         self.next_pool = self._get_next_pool()
-        self.common_words = h.load_file(
-            os.path.join(
-                LOCAL_DIR, 'lists', 'common_words.txt'), raw=True).splitlines()
+        self.common_words = file.load_file(
+            os.path.join(LOCAL_DIR, 'data', 'lists', 'common_words.txt'),
+            raw=True
+        ).splitlines()
         self.secret_word_channels = [
             self.botThread.get_channel_id_by_name(channel)
             for channel in kwargs.get('secret_word_channels', ['general'])
@@ -257,7 +260,7 @@ class CoinsPoolManager(CoinsBase):
 
     # Std Methods
     def listening_for(self, message):
-        if h.now() > getattr(self, 'next_pool', 0):
+        if utils.now() > getattr(self, 'next_pool', 0):
             self._update_pool()
 
         _handle = False
@@ -298,7 +301,7 @@ class CoinsPoolManager(CoinsBase):
     def _generate_secret_word(self):
         fillups = self.db.pool_history.query(
             limit=2, sort='id,desc', fields='fillup_ts')
-        fillups = h.jsearch('[].fillup_ts', fillups)
+        fillups = utils.jsearch('[].fillup_ts', fillups)
 
         users = self.db.balance.query(
             limit=10,
@@ -307,11 +310,11 @@ class CoinsPoolManager(CoinsBase):
             _filter={'user__op': {
                 'startswith': 'U', 'notin_': self.pool_excludes}}
         )
-        users = h.jsearch('[].user', users)
+        users = utils.jsearch('[].user', users)
         messages = []
 
         for channel in self.secret_word_channels:
-            messages += h.call_slack_api(
+            messages += utils.call_slack_api(
                 self.botThread.slack_client,
                 'conversations.history',
                 True,
@@ -328,7 +331,7 @@ class CoinsPoolManager(CoinsBase):
                        '&& !starts_with(text, `!ak`)]').format(
             ', '.join([f'`{u}`' for u in users])
         )
-        messages = h.jsearch(user_search, messages)
+        messages = utils.jsearch(user_search, messages)
         word_pool = {}
 
         for message in messages:
@@ -359,7 +362,7 @@ class CoinsPoolManager(CoinsBase):
 
     def _get_time_to_next_fill_up(self):
         out = []
-        _now = h.now()
+        _now = utils.now()
         diff = self.next_pool - _now
         if diff < 60:
             return f'{diff} Seconds'
@@ -387,14 +390,14 @@ class CoinsPoolManager(CoinsBase):
             word, user = self._generate_secret_word()
             self.db.secret_word.upsert({
                 'id': pool_id,
-                'ts': h.now(),
+                'ts': utils.now(),
                 'secret_word': word,
                 'source_user': user
             })
             self.secret_word = word
 
     def _update_pool(self):
-        _now = h.now()
+        _now = utils.now()
         if self.next_pool <= _now:
             self.next_pool = _now + (randint(4, 15) * 3600)
             amt = randint(25, 75) * 10
@@ -432,10 +435,10 @@ class CoinsMiner(CoinsBase):
 
     # Std Methods
     def listening_for(self, message):
-        if h.now() > self.next_pool:
+        if utils.now() > self.next_pool:
             self._reset(message)
 
-        if not self.secret_word and h.now() - self.gsw_ts > 120:
+        if not self.secret_word and utils.now() - self.gsw_ts > 120:
             self.secret_word = self._get_secret_word()
 
         _handle = False
@@ -536,21 +539,21 @@ class CoinsMiner(CoinsBase):
     def _get_secret_word(self):
         word = self.db.secret_word.get(
             self.pool_id, return_field_value='secret_word')
-        self.gsw_ts = h.now()
+        self.gsw_ts = utils.now()
 
         return word
 
     def _load(self, prop):
         path = os.path.join(self.tx_dir, f'{prop}.json')
         if os.path.isfile(path):
-            return h.load_file(path)
+            return file.load_file(path)
 
         return []
 
     def _load_moined(self):
         path = os.path.join(self.tx_dir, 'moined.json')
         if os.path.isfile(path):
-            return h.load_file(path)
+            return file.load_file(path)
 
         return []
 
@@ -605,7 +608,7 @@ class CoinsMiner(CoinsBase):
         if self._pay('pool', 'escrow', amt, tx_msg):
             self.db.escrow.upsert({
                 'escrow_group_id': self.pool_id,
-                'tx_timestamp': h.now(),
+                'tx_timestamp': utils.now(),
                 'payer_id': 'pool',
                 'payee_id': miner,
                 'amount': amt,
@@ -614,7 +617,7 @@ class CoinsMiner(CoinsBase):
 
     def _write(self, prop):
         path = os.path.join(self.tx_dir, f'{prop}.json')
-        h.write_file(path, getattr(self, prop), 'json')
+        file.write_file(path, getattr(self, prop), 'json')
 
 
 class CoinsAdmin(CoinsBase):
@@ -667,7 +670,7 @@ class CoinsAdmin(CoinsBase):
         response = None
         balances = self._get_balances()
         if balances:
-            response = h.tabulate_data(
+            response = text.tabulate_data(
                 balances,
                 {'user': 'User', 'balance': 'Balance'},
                 fields=['user', 'balance'],
@@ -686,12 +689,12 @@ class CoinsAdmin(CoinsBase):
         )
 
         if escrow:
-            escrow = h.jsearch(
+            escrow = utils.jsearch(
                 ('[].{payee_id: payee_id, amount: amount, memo: split_items'
                  '(memo, `Mining`, `1`)}'),
                 escrow
             )
-            table = h.tabulate_data(
+            table = text.tabulate_data(
                 escrow,
                 {'payee_id': 'User', 'amount': 'Amount', 'memo': 'Memo'},
                 fields=['payee_id', 'amount', 'memo'],

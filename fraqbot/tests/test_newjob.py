@@ -6,17 +6,50 @@ import threading
 from Legobot.Lego import Lego
 from mock import patch
 
+
 LOCAL_PATH = os.path.join(
     os.path.abspath(os.path.dirname(__file__)),
     '..',
     'Local'
 )
 sys.path.append(LOCAL_PATH)
+
+
 from newjob import NewJob  # noqa: E402
+
 
 LOCK = threading.Lock()
 BASEPLATE = Lego.start(None, LOCK)
-LEGO = NewJob(BASEPLATE, LOCK)
+PROPERTIES = [
+    {
+        'name': 'role_modifiers_list',
+        'file': {
+            'path': 'data/lists/role_modifiers.txt',
+            'raw': True,
+            'split_lines': True,
+            'default': []
+        }
+    },
+    {
+        'name': 'roles_list',
+        'file': {
+            'path': 'data/lists/roles.txt',
+            'raw': True,
+            'split_lines': True,
+            'default': []
+        }
+    },
+    {
+        'name': 'companies_list',
+        'file': {
+            'path': 'data/lists/companies.txt',
+            'raw': True,
+            'split_lines': True,
+            'default': []
+        }
+    }
+]
+LEGO = NewJob(BASEPLATE, LOCK, properties=PROPERTIES)
 
 
 def test_listening_for():

@@ -4,7 +4,7 @@ import random
 
 from Legobot.Lego import Lego
 
-from .helpers import call_rest_api
+from .helpers.utils import call_rest_api
 
 
 logger = logging.getLogger(__name__)
@@ -21,6 +21,7 @@ class YourFace(Lego):
                 os.path.abspath(
                     os.path.dirname(__file__)
                 ),
+                'data',
                 'cheats'
             )
         )

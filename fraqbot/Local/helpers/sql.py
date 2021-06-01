@@ -17,10 +17,10 @@ LOCAL_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)))
 sys.path.append(LOCAL_DIR)
 
 
-from helpers import jsearch  # noqa: E402
-from helpers import load_file  # noqa: E402
-from helpers import snake_to_pascal  # noqa: E402
-from helpers import validate_schema  # noqa: E402
+from file import load_file  # noqa: E402
+from file import validate_schema  # noqa: E402
+from text import snake_to_pascal  # noqa: E402
+from utils import jsearch  # noqa: E402
 
 
 TYPES = {
@@ -34,7 +34,8 @@ class Table(object):
     def __init__(self, name, columns, engine):
         validate_schema(
             columns,
-            schema_file=os.path.join(LOCAL_DIR, 'schemas', 'sql_table.yaml'),
+            schema_file=os.path.join(
+                LOCAL_DIR, '..', 'data', 'schemas', 'sql_table.yaml'),
             raise_ex=True
         )
         self.name = name
@@ -321,7 +322,8 @@ class DB(object):
         seeds = {} if not isinstance(seeds, dict) else seeds
         validate_schema(
             {'tables': tables, 'seeds': seeds},
-            schema_file=os.path.join(LOCAL_DIR, 'schemas', 'sql_db.yaml'),
+            schema_file=os.path.join(
+                LOCAL_DIR, '..', 'data', 'schemas', 'sql_db.yaml'),
             raise_ex=True
         )
 

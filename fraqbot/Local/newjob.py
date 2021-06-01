@@ -14,26 +14,13 @@ if LOCAL_DIR not in sys.path:
     sys.path.append(LOCAL_DIR)
 
 
-import helpers as h  # noqa E402
+from helpers.utils import set_properties  # noqa E402
 
 
 class NewJob(Lego):
     def __init__(self, baseplate, lock, *args, **kwargs):
         super().__init__(baseplate, lock, acl=kwargs.get('acl'))
-        self.role_modifiers_list = []
-        self.roles_list = []
-        self.companies_list = []
-        role_modifiers = h.load_file(
-            os.path.join(LOCAL_DIR, 'lists', 'role_modifiers.txt'), raw=True)
-        roles = h.load_file(
-            os.path.join(LOCAL_DIR, 'lists', 'roles.txt'), raw=True)
-        companies = h.load_file(
-            os.path.join(LOCAL_DIR, 'lists', 'companies.txt'), raw=True)
-
-        if role_modifiers and roles and companies:
-            self.role_modifiers_list = role_modifiers.splitlines()
-            self.roles_list = roles.splitlines()
-            self.companies_list = companies.splitlines()
+        set_properties(self, kwargs.get('properties', []), __file__)
 
     def listening_for(self, message):
         text = message.get('text')

@@ -13,18 +13,13 @@ if LOCAL_DIR not in sys.path:
     sys.path.append(LOCAL_DIR)
 
 
-import helpers as h  # noqa E402
+from helpers.utils import set_properties  # noqa E402
 
 
 class Shakespeare(Lego):
     def __init__(self, baseplate, lock, *args, **kwargs):
         super().__init__(baseplate, lock, acl=kwargs.get('acl'))
-        self.insult_array = []
-        insults = h.load_file(
-            os.path.join(LOCAL_DIR, 'lists', 'quotes.txt'), raw=True)
-
-        if insults:
-            self.insult_array = insults.splitlines()
+        set_properties(self, kwargs.get('properties', []), __file__)
 
     def listening_for(self, message):
         text = message.get('text')
