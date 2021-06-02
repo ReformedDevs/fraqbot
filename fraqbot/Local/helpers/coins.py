@@ -5,7 +5,6 @@ import os
 from Legobot.Connectors.Slack import Slack
 from Legobot.Lego import Lego
 
-from helpers import file
 from helpers.sql import DB
 from helpers import utils
 
@@ -37,7 +36,7 @@ class CoinsBase(Lego):
         for _file in os.listdir(table_dir):
             path = os.path.join(table_dir, _file)
             if os.path.isfile(path):
-                tables.update(file.load_file(path))
+                tables.update(utils.load_file(path))
 
         self._init_tx_db(tables, kwargs.get('seeds', {}))
 
@@ -73,6 +72,45 @@ class CoinsBase(Lego):
             setattr(self, key, kwargs.get(key, value))
 
     # Action Methods
+    def _announce(self, msg):
+        channels = getattr(
+            self,
+            'announce_channels',
+            getattr(self, 'disbursement_channels', [])
+        )
+
+        for channel in channels:
+            utils.call_slack_api(
+                self.botThread.slack_client,
+                'chat.postMessage',
+                False,
+                'ok',
+                channel=channel,
+                as_user=True,
+                text=msg
+            )
+
+    def _delete_and_insert_data(self, data):
+        for table, records in data.items():
+            _table = getattr(self.db, table, None)
+            if _table:
+                _table.delete()
+                _table.bulk_insert(records)
+
+    def _get_all_data(self):
+        out = {}
+
+        for table in self.db.tables:
+            _table = getattr(self.db, table, None)
+            if _table:
+                kwargs = {'limit': 'all'}
+                if _table.default_sort_field:
+                    kwargs['sort'] = f'{_table.default_sort_field},asc'
+
+                out[table] = _table.query(**kwargs)
+
+        return out
+
     def _get_balance(self, user, write_starting_balance=False, default=None):
         if default is None:
             default = 0

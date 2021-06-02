@@ -5,6 +5,7 @@ balance:
       - 25
     kwargs:
       primary_key: true
+    default_sort_field: true
   - name: balance
     type: int
     kwargs:

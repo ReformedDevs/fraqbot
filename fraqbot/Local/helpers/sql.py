@@ -17,10 +17,10 @@ LOCAL_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)))
 sys.path.append(LOCAL_DIR)
 
 
-from file import load_file  # noqa: E402
-from file import validate_schema  # noqa: E402
 from text import snake_to_pascal  # noqa: E402
 from utils import jsearch  # noqa: E402
+from utils import load_file  # noqa: E402
+from utils import validate_schema  # noqa: E402
 
 
 TYPES = {
@@ -39,6 +39,7 @@ class Table(object):
             raise_ex=True
         )
         self.name = name
+        self.default_sort_field = None
         self.logger = logging.getLogger(f'Table: {snake_to_pascal(self.name)}')
         self.engine = engine
         self._build_table(columns)
@@ -48,12 +49,16 @@ class Table(object):
         base = declarative_base()
         cls_name = snake_to_pascal(self.name)
         cfg = {'__tablename__': self.name}
+        sort_field = None
         for column in columns:
             _type = TYPES.get(column['type'], String)
             _type_args = column.get('type_args', [])
 
             if _type_args:
                 _type = _type(*_type_args)
+
+            if column.get('default_sort_field'):
+                sort_field = column['name']
 
             kwargs = column.get('kwargs', {})
             cfg[column['name']] = Column(_type, **kwargs)
@@ -62,6 +67,7 @@ class Table(object):
         base.metadata.create_all(self.engine)
         self.pks = [f.key for f in inspect(self.table).primary_key]
         self.fields = [k for k in cfg.keys() if k != '__tablename__']
+        self.default_sort_field = sort_field
 
     def _error(self, name=None, raise_ex=False):
         if self.errors:
@@ -312,6 +318,23 @@ class Table(object):
             self.errors.append(f'Error getting count: {e}')
 
         self._error('count', raise_ex)
+
+        return out
+
+    def delete(self, _filter=None, raise_ex=False):
+        out = None
+        try:
+            query = Query(self.table)
+            query = self._generate_filter(query, _filter) if _filter else query
+
+            with Session(self.engine) as session:
+                out = query.with_session(session).delete()
+                session.commit()
+
+        except Exception as e:
+            self.errors.append(f'Error deleting data: {e}')
+
+        self._error('delete', raise_ex)
 
         return out
 

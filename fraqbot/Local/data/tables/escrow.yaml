@@ -13,6 +13,7 @@ escrow:
     type: float
     kwargs:
       nullable: false
+    default_sort_field: true
   - name: payer_id
     type: string
     type_args:

@@ -11,7 +11,6 @@ sys.path.append(LOCAL_DIR)
 
 
 from helpers.coins import CoinsBase  # noqa: E402
-from helpers import file  # noqa: E402
 from helpers import text  # noqa: E402
 from helpers import utils  # noqa: E402
 
@@ -33,6 +32,8 @@ class Coins(CoinsBase):
         lines.append(f'        • To see all balances: `{triggers} balances`')
         lines.append(
             f'        • To see current escrow (DM only): `{triggers} escrow`')
+        lines.append(
+            f'        • To reconcile transactions: `{triggers} reconcile`')
 
         return '\n'.join(lines)
 
@@ -285,7 +286,7 @@ class CoinsPoolManager(CoinsBase):
 
             if self._update_balance('pool', pool_balance + amt):
                 if self._write_tx(
-                        'None', 'pool', amt, 'daily pool deposit', _now):
+                        'SYSTEM', 'pool', amt, 'daily pool deposit', _now):
                     self.db.pool_history.upsert({
                         'fillup_ts': _now,
                         'next_fillup_ts': self.next_pool,
@@ -418,14 +419,14 @@ class CoinsMiner(CoinsBase):
     def _load(self, prop):
         path = os.path.join(self.tx_dir, f'{prop}.json')
         if os.path.isfile(path):
-            return file.load_file(path)
+            return utils.load_file(path)
 
         return []
 
     def _load_moined(self):
         path = os.path.join(self.tx_dir, 'moined.json')
         if os.path.isfile(path):
-            return file.load_file(path)
+            return utils.load_file(path)
 
         return []
 
@@ -489,7 +490,7 @@ class CoinsMiner(CoinsBase):
 
     def _write(self, prop):
         path = os.path.join(self.tx_dir, f'{prop}.json')
-        file.write_file(path, getattr(self, prop), 'json')
+        utils.write_file(path, getattr(self, prop), 'json')
 
 
 class CoinsAdmin(CoinsBase):
@@ -537,6 +538,19 @@ class CoinsAdmin(CoinsBase):
             if current_escrow_id:
                 return self._format_get_escrow(current_escrow_id)
 
+    def _handle_reconcile(self, message, params):
+        self._announce(f'{self.name} transactions and balances are being '
+                       'reconciled. All transactions and mining wil be '
+                       'ignored until reconciliation is completed.')
+        data = self._get_all_data()
+        data['transaction'] = self._get_merged_tx_data(data['transaction'])
+        data['balance'], data['transaction'], reconciles, removed = (
+            self._reconcile_balances(data['transaction'], data['balance']))
+        self._announce(self._format_reconcile(reconciles, removed))
+        self._delete_and_insert_data(data)
+        self._announce('Transaction Reconciliation completed.')
+        print(data)
+
     # Formatter Methods
     def _format_get_balances(self):
         response = None
@@ -577,3 +591,128 @@ class CoinsAdmin(CoinsBase):
             response = f'Current Unpaid Escrow: {table}'
 
         return response
+
+    def _format_reconcile(self, reconciles, removed):
+        msg = []
+        if reconciles:
+            msg.append(
+                'The following accounts were reconciled: ```{}```'.format(
+                    '\n'.join([
+                        '{}\n  Old: {}\n  New: {}\n'.format(
+                            '<@{}>'.format(
+                                r[0]) if r[0].startswith('U') else r[0],
+                            r[1],
+                            r[2]
+                        )
+                        for r in reconciles
+                    ])
+                )
+            )
+        else:
+            msg.append('No balances changed during reconciliation.')
+
+        if removed:
+            msg.append(
+                'The following transactions were removed: ```{}```'.format(
+                    '\n'.join([
+                        '{}|{}|{}|{}|{}\n    Reasion: {}\n'.format(
+                            r[0]['tx_timestamp'],
+                            r[0]['payer_id'],
+                            r[0]['payee_id'],
+                            r[0]['amount'],
+                            r[0]['memo'],
+                            r[1]
+                        )
+                        for r in removed
+                    ])
+                )
+            )
+        else:
+            msg.append('No transactions were removed during reconciliation.')
+
+        return '\n'.join(msg)
+
+    # Action Methods
+    def _get_merged_tx_data(self, current):
+        csv_data = self._get_tx_csv_data()
+
+        for d in csv_data:
+            transform = (
+                '[?tx_timestamp == `{}` '
+                '&& payee_id == `"{}"` '
+                '&& amount == `{}`]'
+            ).format(d['tx_timestamp'], d['payee_id'], d['amount'])
+            matches = utils.jsearch(transform, current)
+
+            if not matches:
+                current.append(d)
+
+        def add_id(record, _id):
+            record.update({'id': _id})
+
+            return record
+
+        tx_data = [
+            add_id(c, i + 1)
+            for i, c in enumerate(sorted(
+                current, key=lambda k: k['tx_timestamp']))
+        ]
+
+        return tx_data
+
+    def _get_tx_csv_data(self):
+        transform = (
+            '[].{tx_timestamp: to_number(Timestamp), '
+            'payer_id: Payer, '
+            'payee_id: Payee, '
+            'amount: to_number(Amount), '
+            'memo: string_or_null(str_replace('
+            'to_string(Memo), `":::"`, `"\\n"`))}'
+        )
+        return utils.load_file(
+            os.path.join(self.tx_dir, 'tx.csv'),
+            delimiter='|',
+            transform=transform,
+            default=[]
+        )
+
+    def _reconcile_balances(self, tx_data, balances):
+        balances = {b['user']: b['balance'] for b in balances}
+        new_balances = {'SYSTEM': 1000000}
+        new_tx = []
+        removed = []
+        reconciles = []
+
+        for tx in tx_data:
+            if tx['payer_id'] == 'None':
+                tx['payer_id'] = 'SYSTEM'
+
+            amount = tx['amount']
+            payer = tx['payer_id']
+            payee = tx['payee_id']
+
+            if new_balances.get(payer, 0) < amount:
+                removed.append((tx, 'NSF'))
+            else:
+                new_balances[payer] = new_balances.get(payer, 0) - amount
+                new_balances[payee] = new_balances.get(payee, 0) + amount
+                new_tx.append(tx)
+                new_tx[-1].update({'id': len(new_tx) + 1})
+
+        for user, balance in new_balances.items():
+            if balance < 0:
+                balance = 0
+                new_balances[user] = balance
+
+            if user != 'SYSTEM':
+                old_balance = balances.get(user, 0)
+                if old_balance != balance:
+                    reconciles.append((user, old_balance, balance))
+
+        new_balances = [
+            {'user': user, 'balance': balance}
+            for user, balance in new_balances.items()
+            if user != 'SYSTEM'
+        ]
+
+        return new_balances, new_tx, reconciles, removed

@@ -7,6 +7,7 @@ pool_history:
     type: int
     kwargs:
       nullable: false
+    default_sort_field: true
   - name: next_fillup_ts
     type: int
     kwargs:
