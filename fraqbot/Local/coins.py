@@ -1,4 +1,3 @@
-from copy import copy
 import logging
 import os
 from random import choice
@@ -6,130 +5,19 @@ from random import randint
 import re
 import sys
 
-from Legobot.Connectors.Slack import Slack
-from Legobot.Lego import Lego
-
 
 LOCAL_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)))
 sys.path.append(LOCAL_DIR)
 
+
+from helpers.coins import CoinsBase  # noqa: E402
 from helpers import file  # noqa: E402
-from helpers.sql import DB  # noqa: E402
 from helpers import text  # noqa: E402
 from helpers import utils  # noqa: E402
 
 
 LOGGER = logging.getLogger(__name__)
 CHOICES = (False, True, False, True, False)
-DEFAULTS = {
-    'name': 'Coins',
-    'starting_value': 20,
-    'triggers': ['!coins']
-}
-
-
-class CoinsBase(Lego):
-    def __init__(self, baseplate, lock, *args, **kwargs):
-        super().__init__(baseplate, lock, acl=kwargs.get('acl'))
-
-        self._set_bot_thread()
-        self._set_defaults(kwargs)
-
-        # set tx locations and load/initialize db
-        tables = {}
-        table_dir = os.path.join(LOCAL_DIR, 'data', 'tables')
-        for _file in os.listdir(table_dir):
-            path = os.path.join(table_dir, _file)
-            if os.path.isfile(path):
-                tables.update(file.load_file(path))
-
-        self._init_tx_db(tables, kwargs.get('seeds', {}))
-
-    # Init Methods
-    def _init_tx_db(self, tables, seeds):
-        self.tx_dir = os.path.join(LOCAL_DIR, 'coins_tx')
-
-        if not os.path.isdir(self.tx_dir):
-            os.mkdir(self.tx_dir)
-
-        self.tx_db_path = os.path.join(self.tx_dir, 'tx.sqlite')
-        for table, info in seeds.items():
-            if 'file' in info:
-                info['file'] = info['file'].replace('${tx_dir}', self.tx_dir)
-
-        self.db = DB('sqlite', self.tx_db_path, tables, seeds)
-        LOGGER.info(f'{self.name} DB successfully initialized.')
-
-    def _set_bot_thread(self):
-        self.botThread = None
-        children = self.baseplate._actor.children
-
-        if children:
-            slack = [a._actor for a in children if isinstance(a._actor, Slack)]
-            if slack:
-                self.botThread = slack[0].botThread
-
-    def _set_defaults(self, kwargs):
-        defaults = copy(DEFAULTS)
-        defaults.update(kwargs.get('defaults', {}))
-
-        for key, value in defaults.items():
-            setattr(self, key, kwargs.get(key, value))
-
-    # Action Methods
-    def _get_balance(self, user, write_starting_balance=False, default=None):
-        if default is None:
-            default = 0
-
-        balance = self.db.balance.get(user, return_field_value='balance')
-
-        if not isinstance(balance, int) and write_starting_balance is True:
-            balance = self.starting_value
-            self._update_balance(user, balance)
-            self._write_tx('SYSTEM', user, balance, 'Starting Balance')
-
-        if not isinstance(balance, int):
-            balance = default
-
-        return balance
-
-    def _get_balances(self):
-        return self.db.balance.query(sort='balance,asc')
-
-    def _get_user_name(self, user_id):
-        if hasattr(self, 'botThread'):
-            return self.botThread.get_user_name_by_id(user_id, True)
-
-        return user_id
-
-    def _pay(self, payer, payee, amount, memo=None):
-        payer_balance = self._get_balance(payer)
-        if amount > payer_balance:
-            return 'NSF'
-
-        payee_balance = self._get_balance(payee)
-        payer_balance -= amount
-        payee_balance += amount
-
-        debit = self._update_balance(payer, payer_balance)
-        credit = self._update_balance(payee, payee_balance)
-        tx = self._write_tx(payer, payee, amount, memo)
-
-        return all((debit, credit, tx))
-
-    def _update_balance(self, user, amount):
-        return self.db.balance.upsert({'user': user, 'balance': amount})
-
-    def _write_tx(self, source, dest, amount, memo, ts=None):
-        data = {
-            'payer_id': source,
-            'payee_id': dest,
-            'amount': amount,
-            'memo': memo,
-            'tx_timestamp': ts if ts else utils.now()
-        }
-
-        return self.db.transaction.upsert(data)
 
 
 class Coins(CoinsBase):
@@ -239,16 +127,9 @@ class CoinsPoolManager(CoinsBase):
     def __init__(self, baseplate, lock, *args, **kwargs):
         super().__init__(baseplate, lock, **kwargs)
 
+        utils.set_properties(self, kwargs.get('properties', []), __file__)
         self._init_escrow()
         self.next_pool = self._get_next_pool()
-        self.common_words = file.load_file(
-            os.path.join(LOCAL_DIR, 'data', 'lists', 'common_words.txt'),
-            raw=True
-        ).splitlines()
-        self.secret_word_channels = [
-            self.botThread.get_channel_id_by_name(channel)
-            for channel in kwargs.get('secret_word_channels', ['general'])
-        ]
         self._set_secret_word()
         self._update_pool()
 
@@ -299,9 +180,8 @@ class CoinsPoolManager(CoinsBase):
 
     # Action Methods
     def _generate_secret_word(self):
-        fillups = self.db.pool_history.query(
-            limit=2, sort='id,desc', fields='fillup_ts')
-        fillups = utils.jsearch('[].fillup_ts', fillups)
+        fillups = self.db.pool_history.query(limit=2, sort='id,desc')
+        fillups = (fillups[1]['fillup_ts'], fillups[1]['next_fillup_ts'])
 
         users = self.db.balance.query(
             limit=10,
@@ -321,8 +201,8 @@ class CoinsPoolManager(CoinsBase):
                 'messages',
                 total_limit=10000,
                 limit=1000,
-                latest=fillups[0],
-                olders=fillups[1],
+                latest=fillups[1],
+                oldest=fillups[0],
                 channel=channel
             )
 
@@ -424,14 +304,6 @@ class CoinsMiner(CoinsBase):
         self.next_pool = self._get_next_pool()
         self.pool_id = self._get_escrow_pool_id()
         self.secret_word = self._get_secret_word()
-        self.secret_word_channels = [
-            self.botThread.get_channel_id_by_name(channel)
-            for channel in kwargs.get('secret_word_channels', ['general'])
-        ]
-        self.disbursement_channels = [
-            self.botThread.get_channel_id_by_name(channel)
-            for channel in kwargs.get('disbursement_channels', ['general'])
-        ]
 
     # Std Methods
     def listening_for(self, message):
@@ -669,6 +541,7 @@ class CoinsAdmin(CoinsBase):
     def _format_get_balances(self):
         response = None
         balances = self._get_balances()
+        balances = utils.jsearch('[?starts_with(user, `"U"`)]', balances)
         if balances:
             response = text.tabulate_data(
                 balances,
