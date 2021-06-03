@@ -179,9 +179,15 @@ class CoinsPoolManager(CoinsBase):
         return (f'Next fill up and disbursement in {til_next}')
 
     # Action Methods
-    def _generate_secret_word(self):
-        fillups = self.db.pool_history.query(limit=2, sort='id,desc')
-        fillups = (fillups[1]['fillup_ts'], fillups[1]['next_fillup_ts'])
+    def _generate_secret_word(self, periods=None):
+        if not periods or periods < 1:
+            periods = 1
+
+        fillups = self.db.pool_history.query(limit=periods + 1, sort='id,desc')
+        fillups = (
+            fillups[periods]['fillup_ts'],
+            fillups[1]['next_fillup_ts']
+        )
 
         users = self.db.balance.query(
             limit=10,
@@ -230,8 +236,12 @@ class CoinsPoolManager(CoinsBase):
             ]
 
         users = [k for k in word_pool.keys() if word_pool[k]]
-        user = choice(users)
-        word = choice(word_pool[user])
+        if len(users) > 2:
+            user = choice(users)
+            word = choice(word_pool[user])
+        else:
+            word, user = self._generate_secret_word(periods + 1)
+
         return word, user
 
     def _get_next_pool(self):
