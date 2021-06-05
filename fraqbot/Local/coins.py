@@ -236,9 +236,18 @@ class CoinsPoolManager(CoinsBase):
             ]
 
         users = [k for k in word_pool.keys() if word_pool[k]]
+        last_ten = self.db.secret_word.query(sort='id,desc', limit=10)
+        last_ten = utils.jsearch('[].secret_word', last_ten)
         if len(users) > 2:
-            user = choice(users)
-            word = choice(word_pool[user])
+            word = last_ten[0]
+            i = 0
+            while word in last_ten:
+                user = choice(users)
+                word = choice(word_pool[user])
+                i += 1
+
+                if i > 9:
+                    word, user = self._generate_secret_word(periods + 1)
         else:
             word, user = self._generate_secret_word(periods + 1)
 
