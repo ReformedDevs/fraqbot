@@ -334,14 +334,27 @@ class CoinsMiner(CoinsBase):
             and user not in self.pool_excludes
             and channel
         ):
-            _handle = (
-                ('moin' in text.lower() and user not in self.moined)
-                or (self.secret_word in text.lower()
-                    and user not in self.sw_mined
-                    and channel in self.secret_word_channels)
-            )
+            _handle = any([
+                self._listening_for_moin(text, user),
+                self._listening_for_secret_word(text, user, channel)
+            ])
 
         return _handle
+
+    def _listening_for_moin(self, text, user):
+        return 'moin' in text.lower() and user not in self.moined
+
+    def _listening_for_secret_word(self, text, user, channel):
+        sw = getattr(self, 'secret_word', None)
+
+        if not sw or not isinstance(sw, str):
+            return False
+
+        return (
+            sw in text.lower()
+            and user not in self.sw_mined
+            and channel in self.secret_word_channels
+        )
 
     # Handler Methods
     def handle(self, message):
@@ -349,7 +362,10 @@ class CoinsMiner(CoinsBase):
         if 'moin' in message['text'].lower():
             self._mine(miner, 'moined')
 
-        if self.secret_word in message['text'].lower():
+        if (
+            isinstance(self.secret_word, str)
+            and self.secret_word in message['text'].lower()
+        ):
             self._mine(miner, 'sw_mined')
 
     def _format_disburse(self, payment):
