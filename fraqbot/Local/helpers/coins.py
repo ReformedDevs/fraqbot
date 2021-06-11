@@ -126,3 +126,20 @@ class CoinsBase(Lego):
         }
 
         return self.db.transaction.upsert(data)
+
+    # Format Methods
+    def _format_get_balance(self, user):
+        balance = self._get_balance(user, True)
+        if not isinstance(balance, int):
+            return 'There was an error processing this request. See logs.'
+
+        _user = f'<@{user}>' if user != 'pool' else 'The Pool'
+
+        return f'{_user} has {balance} {self.name}.'
+
+    # Helper Methods
+    def _is_private_message(self, message):
+        if not isinstance(message, dict):
+            return False
+
+        return utils.jsearch('metadata.is_private_message', message) is True
