@@ -33,6 +33,8 @@ class Coins(CoinsBase):
         lines.append(f'        • To see all balances: `{triggers} balances`')
         lines.append(
             f'        • To see current escrow (DM only): `{triggers} escrow`')
+        lines.append('        • To see other user\'s balances (DM only): '
+                     f'`{triggers} user_balance <user>`')
 
         return '\n'.join(lines)
 
@@ -88,13 +90,6 @@ class Coins(CoinsBase):
         return self._handle_pay(message, params)
 
     # Format Methods
-    def _format_get_balance(self, user):
-        balance = self._get_balance(user, True)
-        if not isinstance(balance, int):
-            return 'There was an error processing this request. See logs.'
-
-        return f'<@{user}> has {balance} {self.name}.'
-
     def _format_pay(self, payer, payee, amount, memo=None):
         if not payee.startswith('@') and not payee.startswith('<@'):
             return f'{payee} is not a valid tip recipient.'
@@ -562,8 +557,7 @@ class CoinsAdmin(CoinsBase):
         return self._format_get_balances()
 
     def _handle_escrow(self, message, params):
-        private = message.get('metadata', {}).get('is_private_message', False)
-        if private:
+        if self._is_private_message(message):
             current_escrow_id = self.db.pool_history.query(
                 sort={'field': 'id', 'direction': 'desc'},
                 limit=1,
@@ -571,6 +565,12 @@ class CoinsAdmin(CoinsBase):
             )
             if current_escrow_id:
                 return self._format_get_escrow(current_escrow_id)
+
+    def _handle_user_balance(self, message, params):
+        if self._is_private_message(message) and params:
+            user = params[0]
+            user = user[2:-1] if user.startswith('<@') else user
+            return self._format_get_balance(user)
 
     # Formatter Methods
     def _format_get_balances(self):
