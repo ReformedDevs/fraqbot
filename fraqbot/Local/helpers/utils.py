@@ -171,3 +171,10 @@ def set_properties(cls, properties, source_file):
             value = property.get('data')
 
         setattr(cls, property['name'], value)
+
+
+def is_delete_event(message):
+    if not isinstance(message, dict):
+        return False
+
+    return jsearch('metadata.subtype == `"message_deleted"`', message)

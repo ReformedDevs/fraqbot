@@ -10,6 +10,7 @@ if LOCAL_DIR not in sys.path:
     sys.path.append(LOCAL_DIR)
 
 from helpers.utils import call_rest_api  # noqa E402
+from helpers.utils import is_delete_event  # noqa E402
 
 
 logger = logging.getLogger(__name__)
@@ -43,6 +44,9 @@ class Moin(Lego):
         return False
 
     def listening_for(self, message):
+        if is_delete_event(message):
+            return False
+
         return 'moin' in str(message.get('text', '')).lower()
 
     def handle(self, message):

@@ -42,6 +42,9 @@ class Coins(CoinsBase):
         return self.name
 
     def listening_for(self, message):
+        if utils.is_delete_event(message):
+            return False
+
         _handle = False
         text = message.get('text')
         if isinstance(text, str):
@@ -136,6 +139,9 @@ class CoinsPoolManager(CoinsBase):
 
     # Std Methods
     def listening_for(self, message):
+        if utils.is_delete_event(message):
+            return False
+
         if utils.now() > getattr(self, 'next_pool', 0):
             self._update_pool()
 
@@ -321,6 +327,9 @@ class CoinsMiner(CoinsBase):
 
     # Std Methods
     def listening_for(self, message):
+        if utils.is_delete_event(message):
+            return False
+
         if utils.now() > self.next_pool:
             self._reset(message)
 
@@ -525,6 +534,9 @@ class CoinsMiner(CoinsBase):
 class CoinsAdmin(CoinsBase):
     # Std Methods
     def listening_for(self, message):
+        if utils.is_delete_event(message):
+            return False
+
         _handle = False
         user = message.get('metadata', {}).get('source_user')
         if user and user in self.admins:
