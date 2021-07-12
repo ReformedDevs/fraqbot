@@ -35,6 +35,8 @@ class Coins(CoinsBase):
             f'        • To see current escrow (DM only): `{triggers} escrow`')
         lines.append('        • To see other user\'s balances (DM only): '
                      f'`{triggers} user_balance <user>`')
+        lines.append('        • To dedupe moin payouts: '
+                     f'`{triggers} dedupe [<user>]`')
 
         return '\n'.join(lines)
 
@@ -568,6 +570,26 @@ class CoinsAdmin(CoinsBase):
     def _handle_balances(self, message, params):
         return self._format_get_balances()
 
+    def _handle_dedupe(self, message, params):
+        """Remove duplicate moin escrow payouts"""
+        if params:
+            # Dedupe a specific user
+            users = [re.sub(r'[@<>]', '', params[0])]
+        else:
+            # Dedupe all users
+            reg = re.compile(r'^U[A-Z0-9]{8,10}$')
+            users = self.db.balance.query(fields=['user'])
+            users = [u['user'] for u in users if reg.match(u['user'])]
+
+        all_dupes = []
+
+        for user in users:
+            dupes = self._get_duplicate_escrow_payouts(user)
+            if dupes:
+                all_dupes += self._check_dupes_against_escrow(user, dupes)
+
+        return self._format_dedupe(all_dupes)
+
     def _handle_escrow(self, message, params):
         if self._is_private_message(message):
             current_escrow_id = self.db.pool_history.query(
@@ -584,7 +606,95 @@ class CoinsAdmin(CoinsBase):
             user = user[2:-1] if user.startswith('<@') else user
             return self._format_get_balance(user)
 
+    # Action Methods
+    def _check_dupes_against_escrow(self, user, dupes):
+        """Check potential duplicates against actual escrow"""
+        out = []
+        for (first, second) in dupes:
+            # Get the escrow group IDs for the provided duplicate pairs
+            # based on payout timestamp, plus the group ID previous
+            grps = [self.db.pool_history.query(
+                _filter={'fillup_ts__op': {'__ge__': first['tx_timestamp']}},
+                limit=1,
+                return_field_value='id'
+            ) - 1]
+            grps.append(grps[-1] - 1)
+            grps.append(self.db.pool_history.query(
+                _filter={'fillup_ts__op': {'__ge__': second['tx_timestamp']}},
+                limit=1,
+                return_field_value='id'
+            ) - 1)
+            grps.append(grps[-1] - 1)
+
+            # Query the escrow table for these group IDs, user, and amount.
+            # If only one result is found these are genuine dupes.
+            found = self.db.escrow.query(
+                _filter={
+                    'escrow_group_id': {'in_': [str(g) for g in grps]},
+                    'payee_id': user,
+                    'amount': first['amount']
+                }
+            )
+            if len(found) == 1:
+                out.append((first, second))
+            else:
+                print(f'Not duplicate beause {found}')
+
+        return out
+
+    def _get_duplicate_escrow_payouts(self, user):
+        """Get all potential duplicate moin payouts for a user"""
+
+        # Get all transactions for moin payouts from escrow to user
+        payouts = self.db.transaction.query(
+            _filter={
+                'payer_id': 'escrow',
+                'payee_id': user,
+                'memo': 'Happy Moin!'
+            },
+            sort={'field': 'tx_timestamp'}
+        )
+        dupes = []
+
+        # Loop through list. If one of the two following tx is the same amount,
+        # it is a potential duplicate
+        while payouts:
+            tx = payouts.pop(0)
+            amt = tx['amount']
+
+            if len(payouts) >= 2 and payouts[1]['amount'] == amt:
+                dupes.append([tx, payouts.pop(1)])
+
+            if payouts and payouts[0]['amount'] == amt:
+                dupes.append([tx, payouts.pop(0)])
+
+        return dupes
+
     # Formatter Methods
+    def _format_dedupe(self, dupes):
+        out = ['The following duplicate transactions were corrected:']
+
+        for dupe in dupes:
+            user = dupe[1]['payee_id']
+            amt = dupe[1]['amount']
+            tx_id = dupe[1]['id']
+            msg = dupe[1]['memo']
+            # Undo the escrow payment.
+            self._pay(
+                user, 'escrow', amt, f'Corrected duplicate tx, id: {tx_id}.')
+            out.append(f'- <@{user}> received {amt} from escrow for {msg}.')
+
+            # Update the tx log to mark one as a duplicate.
+            # Also prevents subsequent dedupe runs from flagging this tx again.
+            dupe[1]['memo'] += ' DUPLICATE. CORRECTED.'
+            self.db.transaction.upsert(dupe[1])
+
+        # If the out array only contains the heading, there are no dupes
+        if len(out) == 1:
+            return 'No duplicate transactions to correct.'
+
+        return '\n'.join(out)
+
     def _format_get_balances(self):
         response = None
         balances = self._get_balances()
