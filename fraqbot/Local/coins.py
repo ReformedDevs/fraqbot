@@ -144,11 +144,15 @@ class CoinsPoolManager(CoinsBase):
         if utils.is_delete_event(message):
             return False
 
-        if utils.now() > getattr(self, 'next_pool', 0):
+        text = message.get('text')
+
+        if (
+            utils.now() > getattr(self, 'next_pool', 0)
+            and 'moin' not in text.lower()
+        ):
             self._update_pool()
 
         _handle = False
-        text = message.get('text')
         if isinstance(text, str):
             params = re.split(r'\s+', text.lower())
             if (
@@ -332,9 +336,6 @@ class CoinsMiner(CoinsBase):
         if utils.is_delete_event(message):
             return False
 
-        if utils.now() > self.next_pool:
-            self._reset(message)
-
         if not self.secret_word and utils.now() - self.gsw_ts > 120:
             self.secret_word = self._get_secret_word()
 
@@ -353,6 +354,9 @@ class CoinsMiner(CoinsBase):
                 self._listening_for_moin(text, user),
                 self._listening_for_secret_word(text, user, channel)
             ])
+
+        if utils.now() > self.next_pool and not _handle:
+            self._reset(message)
 
         return _handle
 
