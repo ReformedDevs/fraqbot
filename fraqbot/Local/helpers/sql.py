@@ -1,7 +1,10 @@
+from copy import deepcopy
+from importlib import import_module
 import logging
 import os
 import sys
 
+from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -15,6 +18,8 @@ from sqlalchemy import String
 
 LOCAL_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)))
 sys.path.append(LOCAL_DIR)
+SCRIPTS_DIR = os.path.join(LOCAL_DIR, '..', 'scripts')
+sys.path.append(SCRIPTS_DIR)
 
 
 from file import load_file  # noqa: E402
@@ -26,7 +31,27 @@ from utils import jsearch  # noqa: E402
 TYPES = {
     'string': String,
     'int': Integer,
-    'float': Float
+    'float': Float,
+    'boolean': Boolean
+}
+
+MIGRATION_TABLE = {
+    'migration': [
+        {
+            'name': 'id',
+            'type': 'string',
+            'kwargs': {
+                'primary_key': True
+            }
+        },
+        {
+            'name': 'completed',
+            'type': 'boolean',
+            'kwargs': {
+                'default': False
+            }
+        }
+    ]
 }
 
 
@@ -317,11 +342,15 @@ class Table(object):
 
 
 class DB(object):
-    def __init__(self, _type, path=None, tables=None, seeds=None):
+    def __init__(self, _type, path=None, tables=None, seeds=None,
+                 migrations=None):
+        _tables = deepcopy(MIGRATION_TABLE)
         tables = {} if not isinstance(tables, dict) else tables
+        _tables.update(tables)
         seeds = {} if not isinstance(seeds, dict) else seeds
+        migrations = {} if not isinstance(migrations, dict) else migrations
         validate_schema(
-            {'tables': tables, 'seeds': seeds},
+            {'tables': _tables, 'seeds': seeds, 'migrations': migrations},
             schema_file=os.path.join(
                 LOCAL_DIR, '..', 'data', 'schemas', 'sql_db.yaml'),
             raise_ex=True
@@ -330,11 +359,40 @@ class DB(object):
         self.engine = create_engine(f'sqlite:///{path}')
         self.tables = []
 
-        for name, columns in tables.items():
+        for name, columns in _tables.items():
             setattr(self, name, Table(name, columns, self.engine))
             self.tables.append(name)
 
         self.process_seeds(seeds)
+        self.process_migrations(migrations, _tables)
+
+    def get_migration_state(self, _id):
+        state = self.migration.get(_id, return_field_value='completed')
+        if not isinstance(state, bool):
+            state = False
+
+        return state
+
+    def process_migrations(self, migrations, tables):
+        for table_name, migr_set in migrations.items():
+            for migration in migr_set:
+                try:
+                    script_id = migration['id']
+                    migration_id = f'{table_name}-{script_id}'
+                    completed = self.get_migration_state(migration_id)
+
+                    if completed:
+                        continue
+
+                    module = import_module(table_name)
+                    script = getattr(module, script_id)
+                    completed, table = script(
+                        self, table_name, tables[table_name])
+                    setattr(self, table_name, table)
+                    self.migration.upsert(
+                        {'id': migration_id, 'completed': completed})
+                except Exception as e:
+                    print(e)
 
     def process_seeds(self, seeds):
         insert = None

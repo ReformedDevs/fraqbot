@@ -39,10 +39,17 @@ class CoinsBase(Lego):
             if os.path.isfile(path):
                 tables.update(file.load_file(path))
 
-        self._init_tx_db(tables, kwargs.get('seeds', {}))
+        migrations = {}
+        migr_dir = os.path.join(LOCAL_DIR, 'data', 'table_migrations')
+        for _file in os.listdir(migr_dir):
+            path = os.path.join(migr_dir, _file)
+            if os.path.isfile(path):
+                migrations.update(file.load_file(path))
+
+        self._init_tx_db(tables, kwargs.get('seeds', {}), migrations)
 
     # Init Methods
-    def _init_tx_db(self, tables, seeds):
+    def _init_tx_db(self, tables, seeds, migrations):
         self.tx_dir = os.path.join(LOCAL_DIR, 'coins_tx')
 
         if not os.path.isdir(self.tx_dir):
@@ -53,7 +60,7 @@ class CoinsBase(Lego):
             if 'file' in info:
                 info['file'] = info['file'].replace('${tx_dir}', self.tx_dir)
 
-        self.db = DB('sqlite', self.tx_db_path, tables, seeds)
+        self.db = DB('sqlite', self.tx_db_path, tables, seeds, migrations)
         LOGGER.info(f'{self.name} DB successfully initialized.')
 
     def _set_bot_thread(self):

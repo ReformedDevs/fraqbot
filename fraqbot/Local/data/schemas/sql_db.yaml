@@ -15,6 +15,11 @@ properties:
       ^[a-z][a-z0-9_]+:
         $ref: '#/$defs/seedConfig'
     additionalProperties: false
+  migrations:
+    type: object
+    patternProperties:
+      ^[a-z][a-z0-9_]+:
+        $file: ./sql_table_migration.yaml
 additionalProperties: false
 $defs:
   seedConfig:
