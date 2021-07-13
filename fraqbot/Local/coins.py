@@ -412,13 +412,20 @@ class CoinsMiner(CoinsBase):
     # Action Methods
     def _disburse_from_escrow(self, message, escrow_group_id, secret_word):
         payments = self.db.escrow.query(
-            _filter={'escrow_group_id': escrow_group_id}, sort='id,asc')
+            _filter={
+                'escrow_group_id': escrow_group_id,
+                'paid': False
+            },
+            sort='id,asc'
+        )
         responses = []
 
         for payment in payments:
             response = self._format_disburse(payment)
             if response:
                 responses.append(response)
+                payment['paid'] = True
+                self.db.escrow.upsert(payment)
 
         if responses:
             msg = ('*{} Mining Report*\n'

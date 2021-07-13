@@ -31,3 +31,7 @@ escrow:
       nullable: false
   - name: memo
     type: string
+  - name: paid
+    type: boolean
+    kwargs:
+      default: false
