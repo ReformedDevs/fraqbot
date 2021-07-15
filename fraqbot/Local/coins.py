@@ -144,7 +144,7 @@ class CoinsPoolManager(CoinsBase):
         if utils.is_delete_event(message):
             return False
 
-        text = message.get('text')
+        text = message.get('text') if message.get('text') else ''
 
         if (
             utils.now() > getattr(self, 'next_pool', 0)
