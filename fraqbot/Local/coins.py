@@ -66,9 +66,14 @@ class Coins(CoinsBase):
             if method:
                 response = method(message, params)
 
-        if response:
-            opts = self.build_reply_opts(message)
-            self.reply(message, response, opts)
+            if response:
+                ts = message['metadata']['ts']
+
+                if cmd != 'help' and not message['metadata']['thread_ts']:
+                    message['metadata']['thread_ts'] = ts
+
+                opts = self.build_reply_opts(message)
+                self.reply(message, response, opts)
 
     def _handle_balance(self, message, params):
         user = message['metadata']['source_user']
@@ -168,6 +173,11 @@ class CoinsPoolManager(CoinsBase):
     def handle(self, message):
         response = self._format_get_pool()
         if response:
+            ts = message['metadata']['ts']
+
+            if not message['metadata']['thread_ts']:
+                message['metadata']['thread_ts'] = ts
+
             opts = self.build_reply_opts(message)
             self.reply(message, response, opts)
 
@@ -574,9 +584,17 @@ class CoinsAdmin(CoinsBase):
             if method:
                 response = method(message, params)
 
-        if response:
-            opts = self.build_reply_opts(message)
-            self.reply(message, response, opts)
+            if response:
+                ts = message['metadata']['ts']
+
+                if (
+                    cmd in ['balances', 'dedupe']
+                    and not message['metadata']['thread_ts']
+                ):
+                    message['metadata']['thread_ts'] = ts
+
+                opts = self.build_reply_opts(message)
+                self.reply(message, response, opts)
 
     def _handle_balances(self, message, params):
         return self._format_get_balances()
