@@ -1,7 +1,6 @@
 import logging
 import os
 import sys
-import time
 
 from Legobot.Lego import Lego
 
@@ -18,10 +17,14 @@ logger = logging.getLogger(__name__)
 
 class Moin(Lego):
     def __init__(self, baseplate, lock, *args, **kwargs):
-        super().__init__(baseplate, lock, acl=kwargs.get('acl'))
+        super().__init__(
+            baseplate,
+            lock,
+            acl=kwargs.get('acl'),
+            rate_config=kwargs.get('rate_config')
+        )
         self.url_base = kwargs.get('url_base')
         self.api_base = kwargs.get('api_base')
-        self.rate_map = {}
 
     def _get_user_moin(self, user):
         url = f'{self.api_base}/{user}'
@@ -30,18 +33,6 @@ class Moin(Lego):
             return f'{self.url_base}{f_name}'
         else:
             return None
-
-    def _check_rate(self, source_user):
-        if not source_user:
-            return False
-
-        now = int(time.time())
-        last = self.rate_map.get(source_user, 0)
-        if now - last >= 300:
-            self.rate_map[source_user] = now
-            return True
-
-        return False
 
     def listening_for(self, message):
         if is_delete_event(message):
@@ -52,13 +43,10 @@ class Moin(Lego):
     def handle(self, message):
         source_user = message.get('metadata', {}).get('source_user', '')
         logger.debug(f'HANDLING MOIN for {source_user}')
-        check = self._check_rate(source_user)
-        logger.debug(f'CHECK RATE for {source_user}: {check}')
-        if check:
-            moin = self._get_user_moin(source_user)
-            if moin:
-                opts = self.build_reply_opts(message)
-                self.reply_attachment(message, 'moin', moin, opts=opts)
+        moin = self._get_user_moin(source_user)
+        if moin:
+            opts = self.build_reply_opts(message)
+            self.reply_attachment(message, 'moin', moin, opts=opts)
 
     def get_name(self):
         return ''
