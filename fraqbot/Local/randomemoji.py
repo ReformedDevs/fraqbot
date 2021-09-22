@@ -68,8 +68,8 @@ class RandomEmoji(Lego):
         text_provided = message['text'][6:].strip()
 
         opts = self.build_reply_opts(message)
-        if (not text_provided.isdigit()):
-            self.reply(
+        if len(text_provided) > 0 and not text_provided.isdigit():
+            return self.reply(
                 message,
                 '\'{}\' is not a valid integer.'.format(text_provided),
                 opts
