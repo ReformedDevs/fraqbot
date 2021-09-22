@@ -106,5 +106,7 @@ class RandomEmoji(Lego):
         return 'Random_Emoji'
 
     def get_help(self):
-        return ('Get a random Emoji (or multiple!). Limit 20. '
-                + 'Usage: !emoji <how_many[default=5]>')
+        return ('Get a random Emoji (or multiple!).'
+                + 'Search also available. Limit 20. '
+                + 'Usage: !emoji <how_many[default=5]> '
+                + '<search_term[optional]>')
