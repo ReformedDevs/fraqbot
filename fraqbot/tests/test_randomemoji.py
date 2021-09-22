@@ -38,8 +38,12 @@ def test_get_emoji():
         assert isinstance(LEGO._get_emoji(5, None), str)
         assert len(re.findall(':[a-z0-9-_]+:', LEGO._get_emoji(1, None))) == 1
         assert len(re.findall(':[a-z0-9-_]+:', LEGO._get_emoji(5, None))) == 5
-        assert len(re.findall(':[a-z0-9-_]+:', LEGO._get_emoji(20, None))) == 20
-        assert len(re.findall(':[a-z0-9-_]+:', LEGO._get_emoji(5000, None))) == 20
+        assert len(
+            re.findall(':[a-z0-9-_]+:', LEGO._get_emoji(20, None))
+        ) == 20
+        assert len(
+            re.findall(':[a-z0-9-_]+:', LEGO._get_emoji(5000, None))
+        ) == 20
 
         assert LEGO._get_emoji(1, None) == ':_man-shrugging:'
 
