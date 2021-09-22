@@ -43,7 +43,7 @@ def test_get_emoji():
         assert LEGO._get_emoji(1) == ':_man-shrugging:'
 
         five_long = (':_man-shrugging: :_man-shrugging:'
-        + ' :_man-shrugging: :_man-shrugging: :_man-shrugging:')
+                     + ' :_man-shrugging: :_man-shrugging: :_man-shrugging:')
         assert LEGO._get_emoji(5) == five_long
 
         twenty_long = (':_man-shrugging: :_man-shrugging:'
