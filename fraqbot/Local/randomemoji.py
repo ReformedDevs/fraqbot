@@ -3,6 +3,7 @@ import os
 import random
 import sys
 
+from Legobot.Connectors.Slack import Slack
 from Legobot.Lego import Lego
 
 
