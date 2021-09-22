@@ -57,6 +57,7 @@ def test_get_emoji():
         assert LEGO._get_emoji(20) == twenty_long
         assert LEGO._get_emoji(5000) == twenty_long
 
+
 # !emoji 7
 @patch('Legobot.Lego.Lego.reply')
 @patch('randomemoji.RandomEmoji._get_emoji')
@@ -67,6 +68,7 @@ def test_handle_check(mock_get_emoji, mock_reply):
     mock_get_emoji.assert_called_once()
     mock_reply.assert_called_once()
 
+
 # !emoji
 @patch('Legobot.Lego.Lego.reply')
 @patch('randomemoji.RandomEmoji._get_emoji')
@@ -76,6 +78,7 @@ def test_handle_check_2(mock_get_emoji, mock_reply):
 
     mock_get_emoji.assert_called_once()
     mock_reply.assert_called_once()
+
 
 # !emoji bob
 @patch('Legobot.Lego.Lego.reply')
@@ -88,5 +91,6 @@ def test_handle_check_3(mock_get_emoji, mock_reply):
     with pytest.raises(AssertionError):
         mock_get_emoji.assert_called_once()
     mock_reply.assert_called_once()
+
 
 BASEPLATE.stop()
