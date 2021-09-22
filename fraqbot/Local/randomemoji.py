@@ -27,7 +27,8 @@ class RandomEmoji(Lego):
 
     def _get_emoji(self, how_many):
         maximum_how_many = 20
-        how_many_limited = min(maximum_how_many, how_many)
+        minimum_how_many = 1
+        how_many_limited = max(minimum_how_many, min(maximum_how_many, how_many))
         
         emoji_response = utils.call_slack_api(
                 self.slack_client,
