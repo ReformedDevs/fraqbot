@@ -32,11 +32,29 @@ def test_listening_for():
 
 
 def test_get_emoji():
-    assert isinstance(LEGO._get_emoji(5), str)
-    assert len(re.findall(':[a-z0-9-_]+:', LEGO._get_emoji(1))) == 1
-    assert len(re.findall(':[a-z0-9-_]+:', LEGO._get_emoji(5))) == 5
-    assert len(re.findall(':[a-z0-9-_]+:', LEGO._get_emoji(20))) == 20
-    assert len(re.findall(':[a-z0-9-_]+:', LEGO._get_emoji(5000))) == 20
+    with patch('randomemoji.RandomEmoji._fetch_slack_emojis') as mocked_fse:
+        mocked_fse.return_value = {'_man-shrugging': 'some_url'}
+        assert isinstance(LEGO._get_emoji(5), str)
+        assert len(re.findall(':[a-z0-9-_]+:', LEGO._get_emoji(1))) == 1
+        assert len(re.findall(':[a-z0-9-_]+:', LEGO._get_emoji(5))) == 5
+        assert len(re.findall(':[a-z0-9-_]+:', LEGO._get_emoji(20))) == 20
+        assert len(re.findall(':[a-z0-9-_]+:', LEGO._get_emoji(5000))) == 20
+
+        assert LEGO._get_emoji(1) == ':_man-shrugging:'
+
+        five_long = ':_man-shrugging: :_man-shrugging:'
+        + ' :_man-shrugging: :_man-shrugging: :_man-shrugging:'
+        assert LEGO._get_emoji(5) == five_long
+
+        twenty_long = (':_man-shrugging: :_man-shrugging:'
+                       + ' :_man-shrugging: :_man-shrugging: :_man-shrugging:'
+                       + ' :_man-shrugging: :_man-shrugging: :_man-shrugging:'
+                       + ' :_man-shrugging: :_man-shrugging: :_man-shrugging:'
+                       + ' :_man-shrugging: :_man-shrugging: :_man-shrugging:'
+                       + ' :_man-shrugging: :_man-shrugging: :_man-shrugging:'
+                       + ' :_man-shrugging: :_man-shrugging: :_man-shrugging:')
+        assert LEGO._get_emoji(20) == twenty_long
+        assert LEGO._get_emoji(5000) == twenty_long
 
 
 @patch('Legobot.Lego.Lego.reply')

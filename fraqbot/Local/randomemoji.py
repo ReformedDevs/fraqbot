@@ -25,39 +25,50 @@ class RandomEmoji(Lego):
 
         return isinstance(text, str) and text.startswith('!emoji')
 
-    def _get_emoji(self, how_many):
-        maximum_how_many = 20
-        minimum_how_many = 1
-        how_many_limited = max(minimum_how_many, min(maximum_how_many, how_many))
-        
-        emoji_response = utils.call_slack_api(
+    def _fetch_slack_emojis(self):
+        return utils.call_slack_api(
                 self.slack_client,
                 'emoji.list',
-                True,
-                'emoji',
-                total_limit=10000,
-                limit=1000,
+                False,
+                'emoji'
             )
-        
-        final_emoji_text = ""
 
-        x = range(int(how_many_limited))
-        for n in x:
-            final_emoji_text += ' :' + random.choice(list(emoji_response.items()))[0] + ':'
+    def _get_emoji(self, how_many):
+        max_how_many = 20
+        min_how_many = 1
+        how_many_limited = max(min_how_many, min(max_how_many, how_many))
 
-        return final_emoji_text
+        emoji_response = self._fetch_slack_emojis()
+
+        return (':'
+                + ': :'.join(random.choices(
+                        list(emoji_response.keys()), k=how_many_limited
+                    )).strip()
+                + ':')
 
     def handle(self, message):
-        logger.debug('Handling Random Emoji request: {}'.format(message['text']))
+        logger.debug(
+            'Handling Random Emoji request: {}'.format(message['text'])
+        )
         default_how_many = 5
-        how_many = int(message['text'][6:].strip() or default_how_many)
+        text_provided = message['text'][6:].strip()
+
+        opts = self.build_reply_opts(message)
+        if (not text_provided.isdigit()):
+            self.reply(
+                message,
+                '\'{}\' is not a valid integer.'.format(text_provided),
+                opts
+            )
+
+        how_many = int(text_provided or default_how_many)
 
         random_emojis = self._get_emoji(how_many)
-        opts = self.build_reply_opts(message)
         self.reply(message, random_emojis, opts)
 
     def get_name(self):
         return 'Random_Emoji'
 
     def get_help(self):
-        return 'Get a random Emoji (or multiple!). Usage: !emoji <how_many[default=5]>'
+        return ('Get a random Emoji (or multiple!).'
+                + 'Usage: !emoji <how_many[default=5]>')
