@@ -21,6 +21,9 @@ class RandomEmoji(Lego):
     def __init__(self, baseplate, lock, *args, **kwargs):
         super().__init__(baseplate, lock, acl=kwargs.get('acl'))
         self._set_client()
+        self.max_how_many = 20
+        self.min_how_many = 1
+        self.default_how_many = 5
 
     def listening_for(self, message):
         text = message.get('text')
@@ -45,9 +48,10 @@ class RandomEmoji(Lego):
             )
 
     def _get_emoji(self, how_many):
-        max_how_many = 20
-        min_how_many = 1
-        how_many_limited = max(min_how_many, min(max_how_many, how_many))
+        how_many_limited = max(
+            self.min_how_many,
+            min(self.max_how_many, how_many)
+        )
 
         emoji_response = self._fetch_slack_emojis()
 
@@ -61,7 +65,6 @@ class RandomEmoji(Lego):
         logger.debug(
             'Handling Random Emoji request: {}'.format(message['text'])
         )
-        default_how_many = 5
         text_provided = message['text'][6:].strip()
 
         opts = self.build_reply_opts(message)
@@ -72,7 +75,7 @@ class RandomEmoji(Lego):
                 opts
             )
 
-        how_many = int(text_provided or default_how_many)
+        how_many = int(text_provided or self.default_how_many)
 
         random_emojis = self._get_emoji(how_many)
         self.reply(message, random_emojis, opts)
