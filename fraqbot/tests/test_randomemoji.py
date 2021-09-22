@@ -57,6 +57,32 @@ def test_get_emoji():
         assert LEGO._get_emoji(20) == twenty_long
         assert LEGO._get_emoji(5000) == twenty_long
 
+        assert LEGO._get_emoji(1, '_man-') == ':_man-shrugging:'
+        assert LEGO._get_emoji(1, 'rugg') == ':_man-shrugging:'
+        assert LEGO._get_emoji(5, '_man-') == five_long
+        assert len(
+            re.findall('Nothing matched', LEGO._get_emoji(5, ' '))
+        ) == 1
+        assert len(
+            re.findall('Nothing matched', LEGO._get_emoji(5, '__nomatch__'))
+        ) == 1
+
+        # searching
+        assert len(
+            re.findall('_man-shrugging', LEGO._get_emoji(1, 'man'))
+        ) == 1
+        assert len(
+            re.findall('_man-shrugging', LEGO._get_emoji(2, 'man'))
+        ) == 2
+
+        mocked_fse.return_value = {
+            '_man-shrugging': 'some_url',
+            '_woman-shrugging': 'some_url'
+        }
+        assert len(
+            re.findall('_woman-shrugging', LEGO._get_emoji(1, 'woman'))
+        ) == 1
+
 
 # !emoji 7
 @patch('Legobot.Lego.Lego.reply')
