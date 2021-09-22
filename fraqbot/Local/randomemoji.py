@@ -19,15 +19,25 @@ from helpers import utils  # noqa: E402
 class RandomEmoji(Lego):
     def __init__(self, baseplate, lock, *args, **kwargs):
         super().__init__(baseplate, lock, acl=kwargs.get('acl'))
+        self._set_client()
 
     def listening_for(self, message):
         text = message.get('text')
 
         return isinstance(text, str) and text.startswith('!emoji')
 
+    def _set_client(self):
+        self.client = None
+        children = self.baseplate._actor.children
+
+        if children:
+            slack = [a._actor for a in children if isinstance(a._actor, Slack)]
+            if slack:
+                self.client = slack[0].botThread.slack_client
+
     def _fetch_slack_emojis(self):
         return utils.call_slack_api(
-                self.slack_client,
+                self.client,
                 'emoji.list',
                 False,
                 'emoji'
