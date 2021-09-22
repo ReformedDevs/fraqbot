@@ -43,7 +43,7 @@ class RandomEmoji(Lego):
 
         x = range(int(how_many_limited))
         for n in x:
-            final_emoji_text += ':' + random.choice(list(emoji_response.items()))[0] + ':'
+            final_emoji_text += ' :' + random.choice(list(emoji_response.items()))[0] + ':'
 
         return final_emoji_text
 
