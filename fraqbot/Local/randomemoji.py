@@ -26,6 +26,18 @@ class RandomEmoji(Lego):
         self.min_how_many = 1
         self.default_how_many = 5
         self.max_emoji_talk_emojis = 50
+        self.number_to_emoji_map = {
+            '0': ':zero:',
+            '1': ':one:',
+            '2': ':two:',
+            '3': ':three:',
+            '4': ':four:',
+            '5': ':five:',
+            '6': ':six:',
+            '7': ':seven:',
+            '8': ':eight:',
+            '9': ':nine:',
+        }
 
     def listening_for(self, message):
         text = str(message.get('text', ''))
@@ -84,13 +96,25 @@ class RandomEmoji(Lego):
                 + ':')
 
     def _get_emoji_talk(self, text):
-        max_size = self.max_emoji_talk_emojis
         text_as_list = list(text)
-        return ''.join([
-            letter if re.match('[\\s]', letter) else ':{}:'.format(letter)
-            for letter
-            in text_as_list
-        ][:max_size])
+        list_with_emojis = []
+        emojis_added = 0
+        add_ellipsis = False
+        for ind, letter in enumerate(text_as_list):
+            if emojis_added == self.max_emoji_talk_emojis:
+                add_ellipsis = True
+                break
+            else:
+                use_emoji = re.match('[a-zA-Z0-9]', letter)
+                list_with_emojis.append(
+                    letter if not use_emoji
+                    else ':{}:'.format(letter) if not letter.isdigit()
+                    else self.number_to_emoji_map[letter]
+                )
+                if use_emoji:
+                    emojis_added += 1
+
+        return ''.join(list_with_emojis) + ('...' if add_ellipsis else '')
 
     def handle(self, message):
         logger.debug(

@@ -91,12 +91,17 @@ def test_get_emoji():
         assert LEGO._get_emoji_talk(
             'something'
         ) == ':s::o::m::e::t::h::i::n::g:'
+        assert LEGO._get_emoji_talk(
+            'some 123 thing'
+        ) == ':s::o::m::e: :one::two::three: :t::h::i::n::g:'
         # size limit
         assert LEGO._get_emoji_talk(
-            'something really long like this and longer than the allowance'
+            ('something really long like this and longer'
+             + ' than the allowance for emoji talk')
         ) == (':s::o::m::e::t::h::i::n::g: :r::e::a::l::l::y: :l::o::n::g: '
               + ':l::i::k::e: :t::h::i::s: :a::n::d: :l::o::n::g::e::r: '
-              + ':t::h::a::n: :t::h:')
+              + ':t::h::a::n: :t::h::e: :a::l::l::o::w::a::n:'
+              + '...')  # ending is cut off
 
 
 # !emoji 7
