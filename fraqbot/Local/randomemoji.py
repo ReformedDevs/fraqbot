@@ -84,10 +84,15 @@ class RandomEmoji(Lego):
         logger.debug(
             'Handling Random Emoji request: {}'.format(message['text'])
         )
-        how_many = message['text'][6:9].strip()
-        search_term = message['text'][9:].strip()
-
         opts = self.build_reply_opts(message)
+
+        all_additional_text = message['text'][6:]
+        if all_additional_text == 'help':
+            self.reply(message, self.get_help(), opts)
+
+        how_many = all_additional_text[0:3].strip()
+        search_term = all_additional_text[3:].strip()
+
         if len(how_many) > 0 and not how_many.isdigit():
             return self.reply(
                 message,
