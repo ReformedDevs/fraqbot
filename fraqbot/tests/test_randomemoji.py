@@ -101,7 +101,7 @@ def test_get_emoji():
         ) == (':s::o::m::e::t::h::i::n::g: :r::e::a::l::l::y: :l::o::n::g: '
               + ':l::i::k::e: :t::h::i::s: :a::n::d: :l::o::n::g::e::r: '
               + ':t::h::a::n: :t::h::e: :a::l::l::o::w::a::n:'
-              + '...')  # ending is cut off
+              + 'ce for emoji talk')
 
 
 # !emoji 7

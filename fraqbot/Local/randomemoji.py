@@ -99,10 +99,10 @@ class RandomEmoji(Lego):
         text_as_list = list(text)
         list_with_emojis = []
         emojis_added = 0
-        add_ellipsis = False
+        rest_of_list = []
         for ind, letter in enumerate(text_as_list):
             if emojis_added == self.max_emoji_talk_emojis:
-                add_ellipsis = True
+                rest_of_list = text_as_list[ind:]
                 break
             else:
                 use_emoji = re.match('[a-zA-Z0-9]', letter)
@@ -114,7 +114,10 @@ class RandomEmoji(Lego):
                 if use_emoji:
                     emojis_added += 1
 
-        return ''.join(list_with_emojis) + ('...' if add_ellipsis else '')
+        if len(rest_of_list) > 0:
+            list_with_emojis.extend(rest_of_list)
+
+        return ''.join(list_with_emojis)
 
     def handle(self, message):
         logger.debug(
