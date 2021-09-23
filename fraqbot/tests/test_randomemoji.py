@@ -87,6 +87,17 @@ def test_get_emoji():
             re.findall('_woman-shrugging', LEGO._get_emoji(1, 'woman'))
         ) == 1
 
+        # emoji talk
+        assert LEGO._get_emoji_talk(
+            'something'
+        ) == ':s::o::m::e::t::h::i::n::g:'
+        # size limit
+        assert LEGO._get_emoji_talk(
+            'something really long like this and longer than the allowance'
+        ) == (':s::o::m::e::t::h::i::n::g: :r::e::a::l::l::y: :l::o::n::g: '
+              + ':l::i::k::e: :t::h::i::s: :a::n::d: :l::o::n::g::e::r: '
+              + ':t::h::a::n: :t::h:')
+
 
 # !emoji 7
 @patch('Legobot.Lego.Lego.reply')

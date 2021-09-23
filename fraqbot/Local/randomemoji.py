@@ -1,6 +1,7 @@
 import logging
 import os
 import random
+import re
 import sys
 
 from Legobot.Connectors.Slack import Slack
@@ -24,6 +25,7 @@ class RandomEmoji(Lego):
         self.max_how_many = 20
         self.min_how_many = 1
         self.default_how_many = 5
+        self.max_emoji_talk_emojis = 50
 
     def listening_for(self, message):
         text = str(message.get('text', ''))
@@ -81,6 +83,15 @@ class RandomEmoji(Lego):
                     )).strip()
                 + ':')
 
+    def _get_emoji_talk(self, text):
+        max_size = self.max_emoji_talk_emojis
+        text_as_list = list(text)
+        return ''.join([
+            letter if re.match('[\\s]', letter) else ':{}:'.format(letter)
+            for letter
+            in text_as_list
+        ][:max_size])
+
     def handle(self, message):
         logger.debug(
             'Handling Random Emoji request: {}'.format(message['text'])
@@ -94,15 +105,18 @@ class RandomEmoji(Lego):
         how_many = all_additional_text[0:3].strip()
         search_term = all_additional_text[3:].strip()
 
-        if len(how_many) > 0 and not how_many.isdigit():
+        how_many_was_provided = len(how_many) > 0
+
+        # indicates they wanna do 'emoji talk'
+        if how_many_was_provided and not how_many.isdigit():
             return self.reply(
                 message,
-                '\'{}\' is not a valid integer.'.format(how_many),
+                self._get_emoji_talk(all_additional_text),
                 opts
             )
 
         how_many = (int(how_many)
-                    if len(how_many) > 0
+                    if how_many_was_provided
                     else self.default_how_many)
 
         random_emojis = self._get_emoji(how_many, search_term)
