@@ -61,6 +61,7 @@ def test_get_emoji():
         assert LEGO._get_emoji(20, None) == twenty_long
         assert LEGO._get_emoji(5000, None) == twenty_long
 
+        # searching
         assert LEGO._get_emoji(1, '_man-') == ':_man-shrugging:'
         assert LEGO._get_emoji(1, 'rugg') == ':_man-shrugging:'
         assert LEGO._get_emoji(5, '_man-') == five_long
@@ -70,8 +71,6 @@ def test_get_emoji():
         assert len(
             re.findall('Nothing matched', LEGO._get_emoji(5, '__nomatch__'))
         ) == 1
-
-        # searching
         assert len(
             re.findall('_man-shrugging', LEGO._get_emoji(1, 'man'))
         ) == 1
