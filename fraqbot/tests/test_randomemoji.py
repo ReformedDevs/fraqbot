@@ -35,17 +35,21 @@ def test_listening_for():
 def test_get_emoji():
     with patch('randomemoji.RandomEmoji._fetch_slack_emojis') as mocked_fse:
         mocked_fse.return_value = {'_man-shrugging': 'some_url'}
-        assert isinstance(LEGO._get_emoji(5), str)
-        assert len(re.findall(':[a-z0-9-_]+:', LEGO._get_emoji(1))) == 1
-        assert len(re.findall(':[a-z0-9-_]+:', LEGO._get_emoji(5))) == 5
-        assert len(re.findall(':[a-z0-9-_]+:', LEGO._get_emoji(20))) == 20
-        assert len(re.findall(':[a-z0-9-_]+:', LEGO._get_emoji(5000))) == 20
+        assert isinstance(LEGO._get_emoji(5, None), str)
+        assert len(re.findall(':[a-z0-9-_]+:', LEGO._get_emoji(1, None))) == 1
+        assert len(re.findall(':[a-z0-9-_]+:', LEGO._get_emoji(5, None))) == 5
+        assert len(
+            re.findall(':[a-z0-9-_]+:', LEGO._get_emoji(20, None))
+        ) == 20
+        assert len(
+            re.findall(':[a-z0-9-_]+:', LEGO._get_emoji(5000, None))
+        ) == 20
 
-        assert LEGO._get_emoji(1) == ':_man-shrugging:'
+        assert LEGO._get_emoji(1, None) == ':_man-shrugging:'
 
         five_long = (':_man-shrugging: :_man-shrugging:'
                      + ' :_man-shrugging: :_man-shrugging: :_man-shrugging:')
-        assert LEGO._get_emoji(5) == five_long
+        assert LEGO._get_emoji(5, None) == five_long
 
         twenty_long = (':_man-shrugging: :_man-shrugging:'
                        + ' :_man-shrugging: :_man-shrugging: :_man-shrugging:'
@@ -54,8 +58,34 @@ def test_get_emoji():
                        + ' :_man-shrugging: :_man-shrugging: :_man-shrugging:'
                        + ' :_man-shrugging: :_man-shrugging: :_man-shrugging:'
                        + ' :_man-shrugging: :_man-shrugging: :_man-shrugging:')
-        assert LEGO._get_emoji(20) == twenty_long
-        assert LEGO._get_emoji(5000) == twenty_long
+        assert LEGO._get_emoji(20, None) == twenty_long
+        assert LEGO._get_emoji(5000, None) == twenty_long
+
+        # searching
+        assert LEGO._get_emoji(1, '_man-') == ':_man-shrugging:'
+        assert LEGO._get_emoji(1, 'rugg') == ':_man-shrugging:'
+        assert LEGO._get_emoji(5, '_man-') == five_long
+        assert len(
+            re.findall('Nothing matched', LEGO._get_emoji(5, ' '))
+        ) == 1
+        assert len(
+            re.findall('Nothing matched', LEGO._get_emoji(5, '__nomatch__'))
+        ) == 1
+        assert len(
+            re.findall('_man-shrugging', LEGO._get_emoji(1, 'man'))
+        ) == 1
+        assert len(
+            re.findall('_man-shrugging', LEGO._get_emoji(2, 'man'))
+        ) == 2
+
+        mocked_fse.return_value = {
+            '_man-shrugging': 'some_url',
+            '_woman-shrugging': 'some_url'
+        }
+        assert LEGO._get_emoji(1, 'woman') == ':_woman-shrugging:'
+        assert len(
+            re.findall('_woman-shrugging', LEGO._get_emoji(1, 'woman'))
+        ) == 1
 
 
 # !emoji 7
@@ -90,6 +120,21 @@ def test_handle_check_3(mock_get_emoji, mock_reply):
     # Make sure get_emoji was not called
     with pytest.raises(AssertionError):
         mock_get_emoji.assert_called_once()
+    mock_reply.assert_called_once()
+
+
+@patch('Legobot.Lego.Lego.reply')
+@patch('randomemoji.RandomEmoji.get_help')
+@patch('randomemoji.RandomEmoji._get_emoji')
+def test_get_help(mock_get_emoji, mock_get_help, mock_reply):
+    msg = {'text': '!emoji help', 'metadata': {'source_user': 'harold'}}
+    LEGO.handle(msg)
+
+    # Make sure get_emoji was not called
+    with pytest.raises(AssertionError):
+        mock_get_emoji.assert_called_once()
+    # Make sure get_help and reply were called
+    mock_get_help.assert_called_once()
     mock_reply.assert_called_once()
 
 
