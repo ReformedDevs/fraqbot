@@ -62,7 +62,7 @@ class RandomEmoji(Lego):
 
         emoji_list = list(emoji_response.keys())
 
-        if (search_term_normalized):
+        if search_term_normalized:
             filtered_emoji_list = [
                 emoji_name for emoji_name
                 in emoji_list
@@ -91,8 +91,7 @@ class RandomEmoji(Lego):
         if all_additional_text.strip() == 'help':
             return self.reply(message, self.get_help(), opts)
 
-        how_many = all_additional_text[0:3].strip()
-        search_term = all_additional_text[3:].strip()
+        params = utils.parse_message_params(message['text'], fields=['how_many', 'search_term'])
 
         if len(how_many) > 0 and not how_many.isdigit():
             return self.reply(
