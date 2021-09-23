@@ -15,6 +15,7 @@ if LOCAL_DIR not in sys.path:
     sys.path.append(LOCAL_DIR)
 
 
+from helpers.text import parse_message_params  # noqa E402
 from helpers import utils  # noqa: E402
 
 
@@ -76,7 +77,7 @@ class RandomEmoji(Lego):
 
         emoji_list = list(emoji_response.keys())
 
-        if (search_term_normalized):
+        if search_term_normalized:
             filtered_emoji_list = [
                 emoji_name for emoji_name
                 in emoji_list
@@ -129,10 +130,13 @@ class RandomEmoji(Lego):
         if all_additional_text.strip() == 'help':
             return self.reply(message, self.get_help(), opts)
 
-        how_many = all_additional_text[0:3].strip()
-        search_term = all_additional_text[3:].strip()
+        params = parse_message_params(
+            message['text'],
+            fields=['cmd', 'how_many', 'search_term']
+        )
+        how_many = params['how_many']
 
-        how_many_was_provided = len(how_many) > 0
+        how_many_was_provided = how_many and len(how_many) > 0
 
         # indicates they wanna do 'emoji talk'
         if how_many_was_provided and not how_many.isdigit():
@@ -146,7 +150,7 @@ class RandomEmoji(Lego):
                     if how_many_was_provided
                     else self.default_how_many)
 
-        random_emojis = self._get_emoji(how_many, search_term)
+        random_emojis = self._get_emoji(how_many, params['search_term'])
         self.reply(message, random_emojis, opts)
 
     def get_name(self):
