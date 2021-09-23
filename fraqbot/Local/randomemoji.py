@@ -14,6 +14,7 @@ if LOCAL_DIR not in sys.path:
     sys.path.append(LOCAL_DIR)
 
 
+from helpers.text import parse_message_params  # noqa E402
 from helpers import utils  # noqa: E402
 
 
@@ -91,9 +92,13 @@ class RandomEmoji(Lego):
         if all_additional_text.strip() == 'help':
             return self.reply(message, self.get_help(), opts)
 
-        params = utils.parse_message_params(message['text'], fields=['how_many', 'search_term'])
+        params = parse_message_params(
+            message['text'],
+            fields=['cmd', 'how_many', 'search_term']
+        )
+        how_many = params['how_many']
 
-        if len(how_many) > 0 and not how_many.isdigit():
+        if how_many and len(how_many) > 0 and not how_many.isdigit():
             return self.reply(
                 message,
                 '\'{}\' is not a valid integer.'.format(how_many),
@@ -101,10 +106,10 @@ class RandomEmoji(Lego):
             )
 
         how_many = (int(how_many)
-                    if len(how_many) > 0
+                    if how_many and len(how_many) > 0
                     else self.default_how_many)
 
-        random_emojis = self._get_emoji(how_many, search_term)
+        random_emojis = self._get_emoji(how_many, params['search_term'])
         self.reply(message, random_emojis, opts)
 
     def get_name(self):
