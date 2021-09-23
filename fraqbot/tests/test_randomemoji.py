@@ -82,6 +82,7 @@ def test_get_emoji():
             '_man-shrugging': 'some_url',
             '_woman-shrugging': 'some_url'
         }
+        assert LEGO._get_emoji(1, 'woman') == ':_woman-shrugging:'
         assert len(
             re.findall('_woman-shrugging', LEGO._get_emoji(1, 'woman'))
         ) == 1
