@@ -118,3 +118,18 @@ def tabulate_data(data, _map, fields=None, user_id_field=None, thread=None):
             )
 
     return f'```{out}```'
+
+
+def parse_message_params(text, delimiter=None, fields=None):
+    delimiter = delimiter if delimiter else r'\s+'
+
+    params = re.split(delimiter, text)
+
+    if fields:
+        out = {}
+        for f in fields:
+            out[f] = params.pop(0) if params else None
+    else:
+        out = params
+
+    return out

@@ -14,6 +14,7 @@ if LOCAL_DIR not in sys.path:
     sys.path.append(LOCAL_DIR)
 
 
+from helpers.text import parse_message_params  # noqa E402
 from helpers.utils import set_properties  # noqa E402
 
 
@@ -93,10 +94,9 @@ class NewJob(Lego):
 
     def handle(self, message):
         logger.debug('Handling NewJob request: {}'.format(message['text']))
-        text_split = message['text'].split(maxsplit=1)
-        term = text_split[1].strip() if len(text_split) > 1 else None
+        params = parse_message_params(message['text'], fields=['cmd', 'term'])
 
-        new_job = self._get_job(term)
+        new_job = self._get_job(params['term'])
         opts = self.build_reply_opts(message)
         self.reply(message, new_job, opts)
 
