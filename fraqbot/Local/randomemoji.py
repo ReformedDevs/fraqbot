@@ -54,7 +54,7 @@ class RandomEmoji(Lego):
             self.min_how_many,
             min(self.max_how_many, how_many)
         )
-        search_term_normalized = (search_term
+        search_term_normalized = (search_term.lower()
                                   if search_term
                                   and len(search_term) > 0
                                   else None)
