@@ -68,7 +68,7 @@ class RandomEmoji(Lego):
                 if search_term_normalized in emoji_name
             ]
             if len(filtered_emoji_list) < 1:
-                return ('Nothing matched search term.'
+                return ('Nothing matched search term. '
                         + 'Please accept this instead: :'
                         + random.choice(emoji_list) + ':')
             else:
