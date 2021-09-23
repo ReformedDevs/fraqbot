@@ -54,7 +54,7 @@ class RandomEmoji(Lego):
             self.min_how_many,
             min(self.max_how_many, how_many)
         )
-        search_term_normalized = (search_term
+        search_term_normalized = (search_term.lower()
                                   if search_term
                                   and len(search_term) > 0
                                   else None)
@@ -76,10 +76,17 @@ class RandomEmoji(Lego):
             else:
                 emoji_list = filtered_emoji_list
 
+        chosen_emojis = []
+        if len(emoji_list) > how_many:
+            chosen_emojis = random.sample(emoji_list, k=how_many_limited)
+        else:
+            chosen_emojis = list(emoji_list)  # clone b/c shuffle is in place
+            random.shuffle(chosen_emojis)
+            how_many_more = how_many_limited - len(chosen_emojis)
+            chosen_emojis.extend(random.choices(emoji_list, k=how_many_more))
+
         return (':'
-                + ': :'.join(random.choices(
-                        emoji_list, k=how_many_limited
-                    )).strip()
+                + ': :'.join(chosen_emojis)
                 + ':')
 
     def handle(self, message):
