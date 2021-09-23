@@ -123,4 +123,19 @@ def test_handle_check_3(mock_get_emoji, mock_reply):
     mock_reply.assert_called_once()
 
 
+@patch('Legobot.Lego.Lego.reply')
+@patch('randomemoji.RandomEmoji.get_help')
+@patch('randomemoji.RandomEmoji._get_emoji')
+def test_get_help(mock_get_emoji, mock_get_help, mock_reply):
+    msg = {'text': '!emoji help', 'metadata': {'source_user': 'harold'}}
+    LEGO.handle(msg)
+
+    # Make sure get_emoji was not called
+    with pytest.raises(AssertionError):
+        mock_get_emoji.assert_called_once()
+    # Make sure get_emoji was not called
+    mock_get_help.assert_called_once()
+    mock_reply.assert_called_once()
+
+
 BASEPLATE.stop()

@@ -87,8 +87,8 @@ class RandomEmoji(Lego):
         opts = self.build_reply_opts(message)
 
         all_additional_text = message['text'][6:]
-        if all_additional_text == 'help':
-            self.reply(message, self.get_help(), opts)
+        if all_additional_text.strip() == 'help':
+            return self.reply(message, self.get_help(), opts)
 
         how_many = all_additional_text[0:3].strip()
         search_term = all_additional_text[3:].strip()
