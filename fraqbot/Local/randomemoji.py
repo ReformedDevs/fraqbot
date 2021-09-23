@@ -26,9 +26,10 @@ class RandomEmoji(Lego):
         self.default_how_many = 5
 
     def listening_for(self, message):
-        text = message.get('text')
+        text = str(message.get('text', ''))
+        msg_type = utils.jsearch('metadata.subtype', message)
 
-        return isinstance(text, str) and text.startswith('!emoji')
+        return msg_type is None and text.startswith('!emoji')
 
     def _set_client(self):
         self.client = None
