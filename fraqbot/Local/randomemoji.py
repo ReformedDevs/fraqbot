@@ -76,10 +76,14 @@ class RandomEmoji(Lego):
             else:
                 emoji_list = filtered_emoji_list
 
+        chosen_emojis = []
+        if len(emoji_list) > how_many:
+            chosen_emojis = random.sample(emoji_list, k=how_many_limited)
+        else:
+            chosen_emojis = random.choices(emoji_list, k=how_many_limited)
+
         return (':'
-                + ': :'.join(random.choices(
-                        emoji_list, k=how_many_limited
-                    )).strip()
+                + ': :'.join(chosen_emojis).strip()
                 + ':')
 
     def handle(self, message):
