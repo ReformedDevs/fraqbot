@@ -133,7 +133,7 @@ def test_get_help(mock_get_emoji, mock_get_help, mock_reply):
     # Make sure get_emoji was not called
     with pytest.raises(AssertionError):
         mock_get_emoji.assert_called_once()
-    # Make sure get_emoji was not called
+    # Make sure get_help and reply were called
     mock_get_help.assert_called_once()
     mock_reply.assert_called_once()
 
