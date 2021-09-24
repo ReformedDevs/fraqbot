@@ -87,6 +87,9 @@ def test_get_emoji():
             re.findall('_woman-shrugging', LEGO._get_emoji(1, 'woman'))
         ) == 1
 
+        # Find feature should only return the unique list
+        assert LEGO._get_emoji(15, 'woman', True) == ':_woman-shrugging:'
+
         # emoji talk
         assert LEGO._get_emoji_talk(
             'something'

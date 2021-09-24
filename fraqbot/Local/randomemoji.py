@@ -64,7 +64,7 @@ class RandomEmoji(Lego):
                 'emoji'
             )
 
-    def _get_emoji(self, how_many, search_term):
+    def _get_emoji(self, how_many, search_term, use_find_feature=False):
         how_many_limited = max(
             self.min_how_many,
             min(self.max_how_many, how_many)
@@ -97,7 +97,8 @@ class RandomEmoji(Lego):
         else:
             chosen_emojis = list(emoji_list)  # clone b/c shuffle is in place
             random.shuffle(chosen_emojis)
-            how_many_more = how_many_limited - len(chosen_emojis)
+            how_many_more = (0 if use_find_feature
+                             else how_many_limited - len(chosen_emojis))
             chosen_emojis.extend(random.choices(emoji_list, k=how_many_more))
 
         return (':'
@@ -147,8 +148,14 @@ class RandomEmoji(Lego):
 
         how_many_was_provided = how_many and len(how_many) > 0
 
+        use_find_feature = how_many == 'find'
+        if use_find_feature:
+            how_many = self.max_how_many
+
         # indicates they wanna do 'emoji talk'
-        if how_many_was_provided and not how_many.isdigit():
+        if (how_many_was_provided and
+            not how_many.isdigit() and
+                not use_find_feature):
             return self.reply(
                 message,
                 self._get_emoji_talk(all_additional_text),
@@ -159,7 +166,11 @@ class RandomEmoji(Lego):
                     if how_many_was_provided
                     else self.default_how_many)
 
-        random_emojis = self._get_emoji(how_many, params['search_term'])
+        random_emojis = self._get_emoji(
+            how_many,
+            params['search_term'],
+            use_find_feature
+        )
         self.reply(message, random_emojis, opts)
 
     def get_name(self):
