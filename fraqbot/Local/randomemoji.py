@@ -92,7 +92,7 @@ class RandomEmoji(Lego):
                 emoji_list = filtered_emoji_list
 
         chosen_emojis = []
-        if len(emoji_list) > how_many:
+        if len(emoji_list) > how_many_limited:
             chosen_emojis = random.sample(emoji_list, k=how_many_limited)
         else:
             chosen_emojis = list(emoji_list)  # clone b/c shuffle is in place
