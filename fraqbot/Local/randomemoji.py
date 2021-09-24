@@ -38,6 +38,7 @@ class RandomEmoji(Lego):
             '7': ':seven:',
             '8': ':eight:',
             '9': ':nine:',
+            ' ': ':blank:',
         }
 
     def listening_for(self, message):
@@ -113,10 +114,11 @@ class RandomEmoji(Lego):
                 rest_of_list = text_as_list[ind:]
                 break
             else:
-                use_emoji = re.match('[a-zA-Z0-9]', letter)
+                use_emoji = re.match('[a-zA-Z0-9\\s]', letter)
                 list_with_emojis.append(
                     letter if not use_emoji
-                    else ':{}:'.format(letter) if not letter.isdigit()
+                    else ':{}:'.format(letter)
+                    if not letter.isdigit() and not re.match('[\\s]', letter)
                     else self.number_to_emoji_map[letter]
                 )
                 if use_emoji:
