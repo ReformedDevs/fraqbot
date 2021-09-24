@@ -40,6 +40,9 @@ class RandomEmoji(Lego):
             '8': ':eight:',
             '9': ':nine:',
             ' ': ':blank:',
+            '!': ':exclamation:',
+            '?': ':question:',
+            '"': ':air_quotes:',
         }
 
     def listening_for(self, message):
@@ -103,7 +106,7 @@ class RandomEmoji(Lego):
     def _char_to_emoji(self, char):
         if re.match(r'[a-zA-Z]', char):
             return f':{char}:'
-        elif re.match(r'[0-9\s]', char):
+        elif re.match(r'[0-9\s"!?]', char):
             return self.number_to_emoji_map[char]
         else:
             return char
