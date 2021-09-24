@@ -98,9 +98,10 @@ def test_get_emoji():
         assert LEGO._get_emoji_talk(
             ('something really long like this and longer'
              + ' than the allowance for emoji talk')
-        ) == (':s::o::m::e::t::h::i::n::g::blank::r::e::a::l::l::y::blank::l::o::n::g::blank:'
-              + ':l::i::k::e::blank::t::h::i::s::blank::a::n::d::blank::l::o::n::g::e::r::blank:'
-              + ':t::h::a::n::blank::t::h:e allowan'
+        ) == (':s::o::m::e::t::h::i::n::g::blank::r::e::a::l::l::y::blank::l:'
+              + ':o::n::g::blank::l::i::k::e::blank::t::h::i::s::blank:'
+              + ':a::n::d::blank::l::o::n::g::e::r:'
+              + ':blank::t::h::a::n::blank::t::h:e allowan'
               + 'ce for emoji talk')
 
 
