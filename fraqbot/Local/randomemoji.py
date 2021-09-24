@@ -1,6 +1,7 @@
 import logging
 import os
 import random
+import re
 import sys
 
 from Legobot.Connectors.Slack import Slack
@@ -25,6 +26,20 @@ class RandomEmoji(Lego):
         self.max_how_many = 20
         self.min_how_many = 1
         self.default_how_many = 5
+        self.max_emoji_talk_emojis = 50
+        self.number_to_emoji_map = {
+            '0': ':zero:',
+            '1': ':one:',
+            '2': ':two:',
+            '3': ':three:',
+            '4': ':four:',
+            '5': ':five:',
+            '6': ':six:',
+            '7': ':seven:',
+            '8': ':eight:',
+            '9': ':nine:',
+            ' ': ':blank:',
+        }
 
     def listening_for(self, message):
         text = str(message.get('text', ''))
@@ -49,7 +64,7 @@ class RandomEmoji(Lego):
                 'emoji'
             )
 
-    def _get_emoji(self, how_many, search_term):
+    def _get_emoji(self, how_many, search_term, use_find_feature=False):
         how_many_limited = max(
             self.min_how_many,
             min(self.max_how_many, how_many)
@@ -77,17 +92,43 @@ class RandomEmoji(Lego):
                 emoji_list = filtered_emoji_list
 
         chosen_emojis = []
-        if len(emoji_list) > how_many:
+        if len(emoji_list) > how_many_limited:
             chosen_emojis = random.sample(emoji_list, k=how_many_limited)
         else:
             chosen_emojis = list(emoji_list)  # clone b/c shuffle is in place
             random.shuffle(chosen_emojis)
-            how_many_more = how_many_limited - len(chosen_emojis)
+            how_many_more = (0 if use_find_feature
+                             else how_many_limited - len(chosen_emojis))
             chosen_emojis.extend(random.choices(emoji_list, k=how_many_more))
 
         return (':'
                 + ': :'.join(chosen_emojis)
                 + ':')
+
+    def _get_emoji_talk(self, text):
+        text_as_list = list(text)
+        list_with_emojis = []
+        emojis_added = 0
+        rest_of_list = []
+        for ind, letter in enumerate(text_as_list):
+            if emojis_added == self.max_emoji_talk_emojis:
+                rest_of_list = text_as_list[ind:]
+                break
+            else:
+                use_emoji = re.match('[a-zA-Z0-9\\s]', letter)
+                list_with_emojis.append(
+                    letter if not use_emoji
+                    else ':{}:'.format(letter)
+                    if not letter.isdigit() and not re.match('[\\s]', letter)
+                    else self.number_to_emoji_map[letter]
+                )
+                if use_emoji:
+                    emojis_added += 1
+
+        if len(rest_of_list) > 0:
+            list_with_emojis.extend(rest_of_list)
+
+        return ''.join(list_with_emojis)
 
     def handle(self, message):
         logger.debug(
@@ -105,25 +146,41 @@ class RandomEmoji(Lego):
         )
         how_many = params['how_many']
 
-        if how_many and len(how_many) > 0 and not how_many.isdigit():
+        how_many_was_provided = how_many and len(how_many) > 0
+
+        use_find_feature = how_many == 'find'
+        if use_find_feature:
+            how_many = self.max_how_many
+
+        # indicates they wanna do 'emoji talk'
+        if (how_many_was_provided and
+            not how_many.isdigit() and
+                not use_find_feature):
             return self.reply(
                 message,
-                '\'{}\' is not a valid integer.'.format(how_many),
+                self._get_emoji_talk(all_additional_text),
                 opts
             )
 
         how_many = (int(how_many)
-                    if how_many and len(how_many) > 0
+                    if how_many_was_provided
                     else self.default_how_many)
 
-        random_emojis = self._get_emoji(how_many, params['search_term'])
+        random_emojis = self._get_emoji(
+            how_many,
+            params['search_term'],
+            use_find_feature
+        )
         self.reply(message, random_emojis, opts)
 
     def get_name(self):
         return 'Random_Emoji'
 
     def get_help(self):
-        return ('Get a random Emoji (or multiple!). '
-                + 'Search also available. Limit 20. '
-                + 'Usage: !emoji <how_many[default=5]> '
-                + '<search_term[optional]>')
+        return ('Gets random or searched emojis. '
+                + 'Limit 20. Usages: !emoji (gets 5 emojis), '
+                + '!emoji <how_many[default=5]> (gets specified '
+                + 'number of emojis), !emoji <how_many> '
+                + '<search_term> (gets specified number and '
+                + 'searches), !emoji <some_text> (returns " '
+                + 'emoji talk", i.e. your text but in emojis).')
