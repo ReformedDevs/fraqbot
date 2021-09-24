@@ -1,3 +1,4 @@
+import html
 import logging
 import os
 import random
@@ -53,6 +54,7 @@ class RandomEmoji(Lego):
 
         if children:
             slack = [a._actor for a in children if isinstance(a._actor, Slack)]
+
             if slack:
                 self.client = slack[0].botThread.slack_client
 
@@ -65,122 +67,117 @@ class RandomEmoji(Lego):
             )
 
     def _get_emoji(self, how_many, search_term, use_find_feature=False):
+        search_term = search_term.lower() if search_term else None
         how_many_limited = max(
             self.min_how_many,
             min(self.max_how_many, how_many)
         )
-        search_term_normalized = (search_term.lower()
-                                  if search_term
-                                  and len(search_term) > 0
-                                  else None)
+        all_emoji = self._fetch_slack_emojis()
 
-        emoji_response = self._fetch_slack_emojis()
+        if not all_emoji:
+            return None
 
-        emoji_list = list(emoji_response.keys())
+        if search_term:
+            emoji = [e for e in all_emoji.keys() if search_term in e]
 
-        if search_term_normalized:
-            filtered_emoji_list = [
-                emoji_name for emoji_name
-                in emoji_list
-                if search_term_normalized in emoji_name
-            ]
-            if len(filtered_emoji_list) < 1:
-                return ('Nothing matched search term. '
-                        + 'Please accept this instead: :'
-                        + random.choice(emoji_list) + ':')
-            else:
-                emoji_list = filtered_emoji_list
-
-        chosen_emojis = []
-        if len(emoji_list) > how_many_limited:
-            chosen_emojis = random.sample(emoji_list, k=how_many_limited)
+            if not emoji:
+                return ('Nothing matched search term. Please accept this '
+                        f'instead: :{random.choice(list(all_emoji.keys()))}:')
         else:
-            chosen_emojis = list(emoji_list)  # clone b/c shuffle is in place
-            random.shuffle(chosen_emojis)
-            how_many_more = (0 if use_find_feature
-                             else how_many_limited - len(chosen_emojis))
-            chosen_emojis.extend(random.choices(emoji_list, k=how_many_more))
+            emoji = list(all_emoji.keys())
 
-        return (':'
-                + ': :'.join(chosen_emojis)
-                + ':')
+        if len(emoji) > how_many_limited:
+            chosen_emoji = random.sample(emoji, k=how_many_limited)
+        else:
+            chosen_emoji = list(emoji)  # clone b/c shuffle is in place
+            random.shuffle(chosen_emoji)
+            additional = 0
+
+            if not use_find_feature:
+                additional = how_many_limited - len(chosen_emoji)
+
+            chosen_emoji.extend(random.choices(emoji, k=additional))
+
+        return f':{": :".join(chosen_emoji)}:'
+
+    def _char_to_emoji(self, char):
+        if re.match(r'[a-zA-Z]', char):
+            return f':{char}:'
+        elif re.match(r'[0-9\s]', char):
+            return self.number_to_emoji_map[char]
+        else:
+            return char
 
     def _get_emoji_talk(self, text):
-        text_as_list = list(text)
-        list_with_emojis = []
-        emojis_added = 0
-        rest_of_list = []
-        for ind, letter in enumerate(text_as_list):
-            if emojis_added == self.max_emoji_talk_emojis:
-                rest_of_list = text_as_list[ind:]
+        existing_emoji = re.findall(r':[a-zA-Z0-9_-]+:', text)
+        text = re.sub(r':[a-zA-Z0-9_-]+:', '%%', text)
+        ats = re.findall(r'<@[A-Z0-9]{8,10}>', text)
+        text = re.sub(r'<@[A-Z0-9]{8,10}>', '@@', text)
+        emoji_count = len(existing_emoji)
+        response = ''
+
+        for char in text:
+            if emoji_count < self.max_emoji_talk_emojis:
+                char = self._char_to_emoji(char)
+
+            response += char
+
+            if char.startswith(':'):
+                emoji_count += 1
+
+        while existing_emoji:
+            i = response.find('%%')
+
+            if i < 0:
                 break
-            else:
-                use_emoji = re.match('[a-zA-Z0-9\\s]', letter)
-                list_with_emojis.append(
-                    letter if not use_emoji
-                    else ':{}:'.format(letter)
-                    if not letter.isdigit() and not re.match('[\\s]', letter)
-                    else self.number_to_emoji_map[letter]
-                )
-                if use_emoji:
-                    emojis_added += 1
 
-        if len(rest_of_list) > 0:
-            list_with_emojis.extend(rest_of_list)
+            response = response[:i] + existing_emoji.pop(0) + response[i + 2:]
 
-        return ''.join(list_with_emojis)
+        while ats:
+            i = response.find('@@')
+
+            if i < 0:
+                break
+
+            response = response[:i] + ats.pop(0) + response[i + 2:]
+
+        return response
 
     def handle(self, message):
-        logger.debug(
-            'Handling Random Emoji request: {}'.format(message['text'])
-        )
-        opts = self.build_reply_opts(message)
-
-        all_additional_text = message['text'][6:]
-        if all_additional_text.strip() == 'help':
-            return self.reply(message, self.get_help(), opts)
-
+        text = html.unescape(utils.jsearch('metadata.text || text', message))
+        logger.debug(f'Handling Random Emoji request: {text}')
         params = parse_message_params(
             message['text'],
             fields=['cmd', 'how_many', 'search_term']
         )
         how_many = params['how_many']
 
-        how_many_was_provided = how_many and len(how_many) > 0
+        if not how_many:
+            response = self._get_emoji(
+                self.default_how_many, params['search_term'])
+        elif how_many == 'help':
+            response = self.get_help()
+        elif how_many.isdigit():
+            response = self._get_emoji(int(how_many), params['search_term'])
+        elif how_many == 'find':
+            response = self._get_emoji(
+                self.max_how_many, params['search_term'], True)
+        else:
+            response = self._get_emoji_talk(text[6:].strip())
 
-        use_find_feature = how_many == 'find'
-        if use_find_feature:
-            how_many = self.max_how_many
-
-        # indicates they wanna do 'emoji talk'
-        if (how_many_was_provided and
-            not how_many.isdigit() and
-                not use_find_feature):
-            return self.reply(
-                message,
-                self._get_emoji_talk(all_additional_text),
-                opts
-            )
-
-        how_many = (int(how_many)
-                    if how_many_was_provided
-                    else self.default_how_many)
-
-        random_emojis = self._get_emoji(
-            how_many,
-            params['search_term'],
-            use_find_feature
-        )
-        self.reply(message, random_emojis, opts)
+        if response:
+            opts = self.build_reply_opts(message)
+            self.reply(message, response, opts)
 
     def get_name(self):
         return 'Random_Emoji'
 
     def get_help(self):
-        return ('Gets random or searched emojis. '
-                + 'Limit 20. Usages: !emoji (gets 5 emojis), '
-                + '!emoji <how_many[default=5]> (gets specified '
-                + 'number of emojis), !emoji <how_many> '
-                + '<search_term> (gets specified number and '
-                + 'searches), !emoji <some_text> (returns " '
-                + 'emoji talk", i.e. your text but in emojis).')
+        return ('Gets random or searched emoji. Limit 20. Usages:\n'
+                '• `!emoji [optional int]` gets emoji, default 5\n'
+                '• `!emoji <int> <search_term>` gets specified number of '
+                'emoji that match search term\n'
+                '• `!emoji find <search_term>` gets 20 emoji that match the '
+                'search term\n'
+                '• `!emoji <some_text>` returns "emoji talk", '
+                'i.e. your text but in emoji.')
