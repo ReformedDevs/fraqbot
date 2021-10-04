@@ -112,11 +112,19 @@ class RandomEmoji(Lego):
             return char
 
     def _get_emoji_talk(self, text):
-        existing_emoji = re.findall(r':[a-zA-Z0-9_-]+:', text)
+        existing_emoji_or_placeholders = re.findall(
+            r'(:[a-zA-Z0-9_-]+:|%%)',
+            text
+        )
         text = re.sub(r':[a-zA-Z0-9_-]+:', '%%', text)
-        ats = re.findall(r'<@[A-Z0-9]{8,10}>', text)
+        ats_or_placeholders = re.findall(
+            r'(<(?:@|#|!subteam\^)[A-Z0-9]{8,12}(?:\|[@a-z_-]+)?>|@@)',
+            text
+        )
         text = re.sub(r'<@[A-Z0-9]{8,10}>', '@@', text)
-        emoji_count = len(existing_emoji)
+        emoji_count = len(
+            [e for e in existing_emoji_or_placeholders if e != '%%']
+        )
         response = ''
 
         for char in text:
@@ -128,21 +136,25 @@ class RandomEmoji(Lego):
             if char.startswith(':'):
                 emoji_count += 1
 
-        while existing_emoji:
+        while existing_emoji_or_placeholders:
             i = response.find('%%')
 
             if i < 0:
                 break
 
-            response = response[:i] + existing_emoji.pop(0) + response[i + 2:]
+            response = (response[:i] +
+                        existing_emoji_or_placeholders.pop(0) +
+                        response[i + 2:])
 
-        while ats:
+        while ats_or_placeholders:
             i = response.find('@@')
 
             if i < 0:
                 break
 
-            response = response[:i] + ats.pop(0) + response[i + 2:]
+            response = (response[:i] +
+                        ats_or_placeholders.pop(0) +
+                        response[i + 2:])
 
         return response
 
