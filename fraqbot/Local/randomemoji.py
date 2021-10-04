@@ -104,26 +104,25 @@ class RandomEmoji(Lego):
         return f':{": :".join(chosen_emoji)}:'
 
     def _char_to_emoji(self, char):
-        if re.match(r'[a-zA-Z]', char):
-            return f':{char}:'
-        elif re.match(r'[0-9\s"!?]', char):
-            return self.number_to_emoji_map[char]
+        char_lower = char.lower()
+        if char_lower in self.number_to_emoji_map:
+            return self.number_to_emoji_map[char_lower]
+        elif re.match(r'[a-zA-Z]', char_lower):
+            return f':{char_lower}:'
         else:
             return char
 
     def _get_emoji_talk(self, text):
-        existing_emoji_or_placeholders = re.findall(
-            r'(:[a-zA-Z0-9_-]+:|%%)',
-            text
-        )
-        text = re.sub(r':[a-zA-Z0-9_-]+:', '%%', text)
-        ats_or_placeholders = re.findall(
-            r'(<(?:@|#|!subteam\^)[A-Z0-9]{8,12}(?:\|[@a-z_-]+)?>|@@)',
-            text
-        )
-        text = re.sub(r'<@[A-Z0-9]{8,10}>', '@@', text)
+        regex = re.compile(
+                '(:[a-zA-Z0-9_-]+:' +  # Emojis
+                '|<(?:@|#|!subteam\\^)[A-Z0-9]{8,12}' +  # Tag left of |
+                '(?:\\|[@a-z_-]+)?>' +  # Tag right of |
+                '|%%)'  # Existing instances of placeholder
+            )
+        emj_tgs_and_plchldrs = re.findall(regex, text)
+        text = re.sub(regex, '%%', text)
         emoji_count = len(
-            [e for e in existing_emoji_or_placeholders if e != '%%']
+            [e for e in emj_tgs_and_plchldrs if e.startsWith(':')]
         )
         response = ''
 
@@ -136,24 +135,14 @@ class RandomEmoji(Lego):
             if char.startswith(':'):
                 emoji_count += 1
 
-        while existing_emoji_or_placeholders:
+        while emj_tgs_and_plchldrs:
             i = response.find('%%')
 
             if i < 0:
                 break
 
             response = (response[:i] +
-                        existing_emoji_or_placeholders.pop(0) +
-                        response[i + 2:])
-
-        while ats_or_placeholders:
-            i = response.find('@@')
-
-            if i < 0:
-                break
-
-            response = (response[:i] +
-                        ats_or_placeholders.pop(0) +
+                        emj_tgs_and_plchldrs.pop(0) +
                         response[i + 2:])
 
         return response
