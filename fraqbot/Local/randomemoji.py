@@ -113,17 +113,15 @@ class RandomEmoji(Lego):
             return char
 
     def _get_emoji_talk(self, text):
-        regex = re.compile(
-                '(:[a-zA-Z0-9_-]+:' +  # Emojis
-                '|<(?:@|#|!subteam\\^)[A-Z0-9]{8,12}' +  # Tag left of |
-                '(?:\\|[@a-z_-]+)?>' +  # Tag right of |
-                '|%%)'  # Existing instances of placeholder
-            )
+        regex = re.compile(r'(?::[a-zA-Z0-9_-]+:)'
+                           r'|(?:<[@#][A-Z0-9]{8,12}(?:\|[a-z_-]+)?>)'
+                           r'|%%')
         emj_tgs_and_plchldrs = re.findall(regex, text)
         text = re.sub(regex, '%%', text)
-        emoji_count = len(
-            [e for e in emj_tgs_and_plchldrs if e.startsWith(':')]
-        )
+        emoji_count = len([
+            e for e in emj_tgs_and_plchldrs
+            if e.startswith(':')
+        ])
         response = ''
 
         for char in text:
