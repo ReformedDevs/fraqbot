@@ -70,7 +70,7 @@ class RandomEmoji(Lego):
             False,
             'emoji'
             ) or {}
-        return {**custom_emojis, **{x:'' for x in self.default_emojis}}
+        return [*custom_emojis.keys(), *self.default_emojis]
 
     def _get_emoji(self, how_many, search_term, use_find_feature=False):
         search_term = search_term.lower() if search_term else None
@@ -78,19 +78,17 @@ class RandomEmoji(Lego):
             self.min_how_many,
             min(self.max_how_many, how_many)
         )
-        all_emoji = self._fetch_slack_emojis()
+        all_emojis = self._fetch_slack_emojis()
 
-        if not all_emoji:
+        if not all_emojis:
             return None
 
         if search_term:
-            emoji = [e for e in all_emoji.keys() if search_term in e]
+            emoji = [e for e in all_emojis if search_term in e]
 
             if not emoji:
                 return ('Nothing matched search term. Please accept this '
-                        f'instead: :{random.choice(list(all_emoji.keys()))}:')
-        else:
-            emoji = list(all_emoji.keys())
+                        f'instead: :{random.choice(list(all_emojis))}:')
 
         if len(emoji) > how_many_limited:
             chosen_emoji = random.sample(emoji, k=how_many_limited)
