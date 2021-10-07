@@ -63,11 +63,11 @@ class RandomEmoji(Lego):
 
     def _fetch_slack_emojis(self):
         return utils.call_slack_api(
-                self.client,
-                'emoji.list',
-                False,
-                'emoji'
-            )
+            self.client,
+            'emoji.list',
+            False,
+            'emoji'
+            ) or {}
 
     def _get_emoji(self, how_many, search_term, use_find_feature=False):
         search_term = search_term.lower() if search_term else None
