@@ -19,7 +19,6 @@ class Bible(Lego):
             _split.append("")
         return _split
 
-
     def parse_message(self, message_text):
         _, book, ref, ver = self.split_maybe(message_text, " ", 4)
         chapter, verses = self.split_maybe(ref, ':', 2)
@@ -36,12 +35,13 @@ class Bible(Lego):
             passage += "?translation=" + ver
         return passage
 
-
     def get_text(self, verses):
         if len(verses) == 1:
             verses = ' '.join(verses[0]['text'].split())
         else:
-            verses = '\n'.join([f"{x['verse']}: {' '.join(x['text'].split())}" for x in verses])
+            verses = '\n'.join([
+                f"{x['verse']}: {' '.join(x['text'].split())}"
+                for x in verses])
         return verses
 
     def handle(self, message):
