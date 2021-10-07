@@ -1,4 +1,4 @@
-FROM python:3.8.2
+FROM python:3.8.5
 
 RUN mkdir /tmp/logs
 WORKDIR /usr/src/app
@@ -15,4 +15,5 @@ WORKDIR /usr/src/app
 COPY requirements.txt ./
 RUN pip install -r ./requirements.txt
 COPY . .
+RUN mv prod-config.yaml config.yaml
 CMD python chatbot.py

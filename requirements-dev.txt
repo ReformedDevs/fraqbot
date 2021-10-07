@@ -1,0 +1,6 @@
+bandit==1.7.0
+flake8==3.8.4
+hacking==4.0.0
+mock==4.0.3
+pytest==6.2.2
+-r fraqbot/requirements.txt

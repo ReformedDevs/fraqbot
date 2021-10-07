@@ -1,0 +1,33 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+title: Table Config
+description: A config for a sqlalchemy declarative base api table
+type: array
+items:
+  $ref: '#/$defs/column'
+$defs:
+  column:
+    type: object
+    properties:
+      name:
+        type: string
+        pattern: ^[a-z][a-z0-9_]+$
+      type:
+        type: string
+        enum:
+          - string
+          - int
+          - float
+          - boolean
+      type_args:
+        type: array
+      kwargs:
+        type: object
+        properties:
+          nullable:
+            type: boolean
+          primary_key:
+            type: boolean
+    additionalProperties: false
+    required:
+      - name
+      - type

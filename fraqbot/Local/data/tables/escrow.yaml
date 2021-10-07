@@ -1,0 +1,37 @@
+escrow:
+  - name: id
+    type: int
+    kwargs:
+      primary_key: true
+  - name: escrow_group_id
+    type: string
+    type_args:
+      - 64
+    kwargs:
+      nullable: false
+  - name: tx_timestamp
+    type: float
+    kwargs:
+      nullable: false
+  - name: payer_id
+    type: string
+    type_args:
+      - 25
+    kwargs:
+      nullable: false
+  - name: payee_id
+    type: string
+    type_args:
+      - 25
+    kwargs:
+      nullable: false
+  - name: amount
+    type: int
+    kwargs:
+      nullable: false
+  - name: memo
+    type: string
+  - name: paid
+    type: boolean
+    kwargs:
+      default: false

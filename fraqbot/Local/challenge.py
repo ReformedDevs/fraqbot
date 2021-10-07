@@ -79,9 +79,9 @@ class Challenge(Lego):
         if lines[1].startswith('---'):
             lines.pop(1)
 
-        for l in lines[1:]:
+        for ln in lines[1:]:
             rec = {}
-            items = [i.strip() for i in l.split('|')]
+            items = [i.strip() for i in ln.split('|')]
             for i, k in enumerate(keys):
                 rec[k] = items[i]
 
@@ -96,12 +96,12 @@ class Challenge(Lego):
         h_pos = md.find(header)
         lines = md[h_pos:].splitlines()
         out = []
-        for l in lines:
-            if not out and '|' in l:
-                out.append(l)
-            elif out and '|' in l:
-                out.append(l)
-            elif out and '|' not in l:
+        for ln in lines:
+            if not out and '|' in ln:
+                out.append(ln)
+            elif out and '|' in ln:
+                out.append(ln)
+            elif out and '|' not in ln:
                 break
 
         if not out:

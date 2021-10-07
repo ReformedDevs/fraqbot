@@ -3,7 +3,8 @@
 tips.cfg
 redis-data/*
 config.ini
-*config.yaml
+config.yaml
+dev-config.yaml
 temp/
 venv/*
 .env
@@ -12,3 +13,4 @@ venv/*
 .cache
 .pytest_cache
 .python-version
+coins_tx

@@ -1,0 +1,30 @@
+connectors:
+  Slack:
+    enabled: true
+    path: Legobot.Connectors.Slack.Slack
+    kwargs:
+      token: <a Slack API token>
+helpEnabled: true
+legos:
+  Shakespeare:
+    enabled: true
+    path: Local.shakespeare.Shakespeare # Import path to the Lego Class
+    kwargs:
+      acl: # acl restricts Lego interaction to only whitelist/blacklist. Usefor for testing.
+        whitelist:
+          - <a Slack user ID>
+      name: ShakespeareQuotes
+      admins:
+        - <a Slack user ID>
+      triggers:
+        - "!shake"
+      pool_excludes:
+        - <a Slack bot ID> # Keeps fraqbot from getting paid from the pool.
+      properties:  # Array of attributes to set on the class using helpers.utils.set_properties
+        - name: insult_array
+          file:
+            path: 'data/lists/quotes.txt'
+            raw: true
+            split_lines: true
+            default: []
+  

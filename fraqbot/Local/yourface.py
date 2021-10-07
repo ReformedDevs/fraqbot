@@ -4,7 +4,7 @@ import random
 
 from Legobot.Lego import Lego
 
-from .helpers import call_rest_api
+from .helpers.utils import call_rest_api
 
 
 logger = logging.getLogger(__name__)
@@ -21,6 +21,7 @@ class YourFace(Lego):
                 os.path.abspath(
                     os.path.dirname(__file__)
                 ),
+                'data',
                 'cheats'
             )
         )
@@ -54,7 +55,8 @@ class YourFace(Lego):
                 self.reply(message, text_response, opts)
 
     def _get_your_face_quote(self):
-        quote = call_rest_api(__name__, 'get', self.api, response='json')
+        quote = call_rest_api(
+            __name__, 'get', self.api, response='json', default={})
         quote = quote.get('quote')
 
         if not quote:

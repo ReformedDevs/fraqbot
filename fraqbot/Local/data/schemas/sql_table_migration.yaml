@@ -1,0 +1,13 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+title: Table Migration Config
+description: A config for a fraqbot DB implementation of table migration processing
+type: array
+items:
+  $ref: '#/$defs/migration'
+
+$defs:
+  migration:
+    id:
+      type: string
+    script:
+      type: string
