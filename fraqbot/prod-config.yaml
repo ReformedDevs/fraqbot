@@ -97,7 +97,7 @@ legos:
             split_lines: true
             default: []
   Bible:
-    enabled: false
+    enabled: true
     path: Local.bible.Bible
   FactSphere:
     enabled: true
