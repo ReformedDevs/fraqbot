@@ -180,6 +180,12 @@ legos:
   RandomEmoji:
     enabled: true
     path: Local.randomemoji.RandomEmoji
+    kwargs:
+      properties:
+        - name: default_emojis
+          file:
+            path: 'data/lists/default_emojis.json'
+            default: []
   Shakespeare:
     enabled: true
     path: Local.shakespeare.Shakespeare

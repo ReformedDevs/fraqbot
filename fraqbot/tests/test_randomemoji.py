@@ -34,7 +34,7 @@ def test_listening_for():
 
 def test_get_emoji():
     with patch('randomemoji.RandomEmoji._fetch_slack_emojis') as mocked_fse:
-        mocked_fse.return_value = {'_man-shrugging': 'some_url'}
+        mocked_fse.return_value = ['_man-shrugging']
         assert isinstance(LEGO._get_emoji(5, None), str)
         assert len(re.findall(':[a-z0-9-_]+:', LEGO._get_emoji(1, None))) == 1
         assert len(re.findall(':[a-z0-9-_]+:', LEGO._get_emoji(5, None))) == 5
@@ -78,10 +78,10 @@ def test_get_emoji():
             re.findall('_man-shrugging', LEGO._get_emoji(2, 'man'))
         ) == 2
 
-        mocked_fse.return_value = {
-            '_man-shrugging': 'some_url',
-            '_woman-shrugging': 'some_url'
-        }
+        mocked_fse.return_value = [
+            '_man-shrugging',
+            '_woman-shrugging'
+        ]
         assert LEGO._get_emoji(1, 'woman') == ':_woman-shrugging:'
         assert len(
             re.findall('_woman-shrugging', LEGO._get_emoji(1, 'woman'))
