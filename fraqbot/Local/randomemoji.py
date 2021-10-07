@@ -1,4 +1,5 @@
 import html
+import json
 import logging
 import os
 import random
@@ -23,6 +24,7 @@ from helpers import utils  # noqa: E402
 class RandomEmoji(Lego):
     def __init__(self, baseplate, lock, *args, **kwargs):
         super().__init__(baseplate, lock, acl=kwargs.get('acl'))
+        utils.set_properties(self, kwargs.get('properties', []), __file__)
         self._set_client()
         self.max_how_many = 20
         self.min_how_many = 1
@@ -62,12 +64,13 @@ class RandomEmoji(Lego):
                 self.client = slack[0].botThread.slack_client
 
     def _fetch_slack_emojis(self):
-        return utils.call_slack_api(
+        custom_emojis = utils.call_slack_api(
             self.client,
             'emoji.list',
             False,
             'emoji'
             ) or {}
+        return {**custom_emojis, **{x:'' for x in self.default_emojis}}
 
     def _get_emoji(self, how_many, search_term, use_find_feature=False):
         search_term = search_term.lower() if search_term else None
