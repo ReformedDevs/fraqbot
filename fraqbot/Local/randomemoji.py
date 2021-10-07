@@ -88,6 +88,8 @@ class RandomEmoji(Lego):
             if not emoji:
                 return ('Nothing matched search term. Please accept this '
                         f'instead: :{random.choice(list(all_emojis))}:')
+        else:
+            emoji = all_emojis
 
         if len(emoji) > how_many_limited:
             chosen_emoji = random.sample(emoji, k=how_many_limited)
