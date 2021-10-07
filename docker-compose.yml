@@ -1,14 +1,13 @@
-version: "3.5"
+version: '3.7'
 services:
-  chatbot:
+  fraqbot:
     container_name: fraqbot
     restart: always
     image: drewpearce/trd-fraqbot
     # build: fraqbot/
     env_file: .env
     volumes:
-      - "$HOME/logs:/tmp/logs"
-      - "./config.yaml:/usr/src/app/config.yaml"
+      - '$HOME/logs:/tmp/logs'
       - ./fraqbot/Local/coins_tx:/usr/src/app/Local/coins_tx
     networks:
       legobot:
