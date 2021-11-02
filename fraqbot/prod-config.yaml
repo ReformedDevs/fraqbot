@@ -68,6 +68,13 @@ legos:
         secret_word_channels:
           - general
           - random
+      properties:
+        - name: common_words
+          file:
+            path: data/lists/common_words.txt
+            raw: true
+            split_lines: true
+            default: []
   AshokCoinMiner:
     enabled: true
     path: Local.coins.CoinsMiner
