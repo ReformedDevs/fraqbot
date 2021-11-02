@@ -56,9 +56,9 @@ legos:
           - random
         disbursement_channels:
           - general
-  AshokCoinMiner:
+  AshokCoinSecretWord:
     enabled: true
-    path: Local.coins.CoinsMiner
+    path: Local.coins.CoinsSecretWord
     kwargs:
       name: AshokCoin
       defaults:
@@ -68,6 +68,15 @@ legos:
         secret_word_channels:
           - general
           - random
+  AshokCoinMiner:
+    enabled: true
+    path: Local.coins.CoinsMiner
+    kwargs:
+      name: AshokCoin
+      defaults:
+        admins: ${{LIST::ENV::ADMINS}}
+        pool_excludes:
+          - ${{ENV::FRAQBOT_ID}}
         disbursement_channels:
           - general
       acl:
