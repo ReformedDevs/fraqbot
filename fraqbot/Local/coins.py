@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 from random import choice
@@ -128,83 +129,87 @@ class Coins(CoinsBase):
                     f'to <@{_payee}>.')
 
 
-class CoinsPoolManager(CoinsBase):
+class CoinsSecretWord(CoinsBase):
     def __init__(self, baseplate, lock, *args, **kwargs):
         super().__init__(baseplate, lock, **kwargs)
 
         utils.set_properties(self, kwargs.get('properties', []), __file__)
-        self._init_escrow()
-        self.next_pool = self._get_next_pool()
         self._set_secret_word()
-        self._update_pool()
-
-    # Init Methods
-    def _init_escrow(self):
-        balance = self._get_balance('escrow', default=False)
-        if balance is False:
-            self._update_balance('escrow', 0)
 
     # Std Methods
     def listening_for(self, message):
         if utils.is_delete_event(message):
             return False
 
-        text = message.get('text') if message.get('text') else ''
+        text = message.get('text')
 
-        if (
-            utils.now() > getattr(self, 'next_pool', 0)
-            and 'moin' not in text.lower()
-        ):
-            self._update_pool()
+        if not isinstance(text, str):
+            return False
 
-        _handle = False
-        if isinstance(text, str):
-            params = re.split(r'\s+', text.lower())
-            if (
-                len(params) > 1
-                and params[0] in self.triggers
-                and params[1] == 'pool'
-            ):
-                _handle = True
+        match = re.search(f'\\W*{self.secret_word}\\W*', text.lower())
 
-        return _handle
+        return match
 
-    # Hanlde Methods
     def handle(self, message):
-        response = self._format_get_pool()
-        if response:
-            ts = message['metadata']['ts']
-
-            if not message['metadata']['thread_ts']:
-                message['metadata']['thread_ts'] = ts
-
-            opts = self.build_reply_opts(message)
-            self.reply(message, response, opts)
-
-    # Format Methods
-    def _format_get_pool(self):
-        msg = 'There was an error processing this request. See logs.'
-
-        # balance = self._get_balance('pool')
-        # if not isinstance(balance, int):
-        #     return msg
-
-        til_next = self._get_time_to_next_fill_up()
-        if not til_next:
-            return msg
-
-        return (f'Next fill up and disbursement in {til_next}')
+        _args = [self.secret_word, message]
+        self._set_completed(self.secret_word)
+        self._set_secret_word()
+        self._announce_secret_word(*_args)
+        return None
 
     # Action Methods
+    def _announce_secret_word(self, word, message):
+        paid = self._payout(word, message)
+
+        if not paid:
+            return False
+
+        blocks = [
+            {
+                'type': 'header',
+                'text': {
+                    'type': 'plain_text',
+                    'text': 'YOU SAID THE SECRET WORD'
+                }
+            },
+            {
+                'type': 'image',
+                'image_url': ('https://www.themarysue.com/wp-content/uploads'
+                              '/2015/10/secret-word-ph.gif'),
+                'alt_text': ''
+            },
+            {
+                'type': 'section',
+                'fields': [{
+                    'type': 'mrkdwn',
+                    'text': (f'The secret word was `{word}`. \n '
+                             f'You earned {paid} {self.name}')
+                }]
+            }
+        ]
+        utils.call_slack_api(
+            self.botThread.slack_client,
+            'chat.postMessage',
+            False,
+            None,
+            channel=utils.jsearch('metadata.source_channel || ""', message),
+            as_user=True,
+            thread_ts=utils.jsearch(
+                'metadata.thread_ts || metadata.ts || ""', message),
+            reply_broadcast=True,
+            blocks=json.dumps(blocks)
+        )
+
     def _generate_secret_word(self, periods=None):
         if not periods or periods < 1:
             periods = 1
 
-        fillups = self.db.pool_history.query(limit=periods + 1, sort='id,desc')
-        fillups = (
-            fillups[periods]['fillup_ts'],
-            fillups[1]['next_fillup_ts']
-        )
+        fillups = self.db.secret_word.query(limit=periods, sort='id,desc')
+
+        if periods == 1:
+            fillups = (fillups['ts'], utils.now())
+        else:
+            fillups = (fillups[periods - 1]['ts'], utils.now())
 
         users = self.db.balance.query(
             limit=10,
@@ -270,6 +275,128 @@ class CoinsPoolManager(CoinsBase):
 
         return word, user
 
+    def _payout(self, word, message):
+        records = self.db.secret_word.query(limit=2, sort='id, DESC')
+        time_diff = records[0]['ts'] - records[1]['ts']
+
+        if time_diff > 999:
+            time_diff = int(str(time_diff)[:3])
+
+        percent = randint(45, 80) / 100
+        amt = int(time_diff * percent)
+        pool = self._get_balance('secret_word_pool', True)
+
+        if self._update_balance('secret_word_pool', pool + amt):
+            if self._write_tx(
+                'None',
+                'secret_word_pool',
+                amt,
+                'secret_word deposit',
+                utils.now()
+            ):
+                self._pay(
+                    'secret_word_pool',
+                    utils.jsearch('metadata.source_user || ""', message),
+                    amt,
+                    f'You said the secret word! {word}.'
+                )
+
+                return amt
+
+        return 0
+
+    def _set_completed(self, word):
+        record = self.db.secret_word.query(limit=1, sort='id, DESC')
+
+        if record and record['secret_word'] == word:
+            record['completed'] = True
+            self.db.secret_word.upsert(record)
+
+    def _set_secret_word(self):
+        record = self.db.secret_word.query(limit=1, sort='id, DESC')
+
+        if record and record['completed'] is not True:
+            self.secret_word = record['secret_word']
+            self.secret_ts = record['ts']
+        else:
+            word, user = self._generate_secret_word()
+            now = utils.now()
+            self.db.secret_word.upsert({
+                'ts': now,
+                'secret_word': word,
+                'source_user': user
+            })
+            self.secret_word = word
+            self.secret_ts = now
+
+
+class CoinsPoolManager(CoinsBase):
+    def __init__(self, baseplate, lock, *args, **kwargs):
+        super().__init__(baseplate, lock, **kwargs)
+
+        utils.set_properties(self, kwargs.get('properties', []), __file__)
+        self._init_escrow()
+        self.next_pool = self._get_next_pool()
+        self._update_pool()
+
+    # Init Methods
+    def _init_escrow(self):
+        balance = self._get_balance('escrow', default=False)
+        if balance is False:
+            self._update_balance('escrow', 0)
+
+    # Std Methods
+    def listening_for(self, message):
+        if utils.is_delete_event(message):
+            return False
+
+        text = message.get('text') if message.get('text') else ''
+
+        if (
+            utils.now() > getattr(self, 'next_pool', 0)
+            and 'moin' not in text.lower()
+        ):
+            self._update_pool()
+
+        _handle = False
+        if isinstance(text, str):
+            params = re.split(r'\s+', text.lower())
+            if (
+                len(params) > 1
+                and params[0] in self.triggers
+                and params[1] == 'pool'
+            ):
+                _handle = True
+
+        return _handle
+
+    # Hanlde Methods
+    def handle(self, message):
+        response = self._format_get_pool()
+        if response:
+            ts = message['metadata']['ts']
+
+            if not message['metadata']['thread_ts']:
+                message['metadata']['thread_ts'] = ts
+
+            opts = self.build_reply_opts(message)
+            self.reply(message, response, opts)
+
+    # Format Methods
+    def _format_get_pool(self):
+        msg = 'There was an error processing this request. See logs.'
+
+        # balance = self._get_balance('pool')
+        # if not isinstance(balance, int):
+        #     return msg
+
+        til_next = self._get_time_to_next_fill_up()
+        if not til_next:
+            return msg
+
+        return (f'Next fill up and disbursement in {til_next}')
+
+    # Action Methods
     def _get_next_pool(self):
         next_pool = self.db.pool_history.query(
             limit=1, sort='id,desc', return_field_value='next_fillup_ts')
@@ -294,24 +421,6 @@ class CoinsPoolManager(CoinsBase):
 
         return ', '.join(out)
 
-    def _set_secret_word(self):
-        pool_id = self.db.pool_history.query(
-            limit=1, sort='id,desc', return_field_value='id')
-        pool_id = pool_id if pool_id else 1
-        record = self.db.secret_word.query(limit=1, _filter={'id': pool_id})
-
-        if record:
-            self.secret_word = record['secret_word']
-        else:
-            word, user = self._generate_secret_word()
-            self.db.secret_word.upsert({
-                'id': pool_id,
-                'ts': utils.now(),
-                'secret_word': word,
-                'source_user': user
-            })
-            self.secret_word = word
-
     def _update_pool(self):
         _now = utils.now()
         if self.next_pool <= _now:
@@ -328,8 +437,6 @@ class CoinsPoolManager(CoinsBase):
                         'amount': amt
                     })
 
-            self._set_secret_word()
-
 
 class CoinsMiner(CoinsBase):
     def __init__(self, baseplate, lock, *args, **kwargs):
@@ -339,15 +446,11 @@ class CoinsMiner(CoinsBase):
         self.sw_mined = self._load('sw_mined')
         self.next_pool = self._get_next_pool()
         self.pool_id = self._get_escrow_pool_id()
-        self.secret_word = self._get_secret_word()
 
     # Std Methods
     def listening_for(self, message):
         if utils.is_delete_event(message):
             return False
-
-        if not self.secret_word and utils.now() - self.gsw_ts > 120:
-            self.secret_word = self._get_secret_word()
 
         _handle = False
         text = message.get('text')
@@ -360,10 +463,7 @@ class CoinsMiner(CoinsBase):
             and user not in self.pool_excludes
             and channel
         ):
-            _handle = any([
-                self._listening_for_moin(text, user),
-                self._listening_for_secret_word(text, user, channel)
-            ])
+            _handle = any([self._listening_for_moin(text, user)])
 
         if utils.now() > self.next_pool and not _handle:
             self._reset(message)
@@ -373,29 +473,11 @@ class CoinsMiner(CoinsBase):
     def _listening_for_moin(self, text, user):
         return 'moin' in text.lower() and user not in self.moined
 
-    def _listening_for_secret_word(self, text, user, channel):
-        sw = getattr(self, 'secret_word', None)
-
-        if not sw or not isinstance(sw, str):
-            return False
-
-        return (
-            sw in text.lower()
-            and user not in self.sw_mined
-            and channel in self.secret_word_channels
-        )
-
     # Handler Methods
     def handle(self, message):
         miner = message['metadata']['source_user']
         if 'moin' in message['text'].lower():
             self._mine(miner, 'moined')
-
-        if (
-            isinstance(self.secret_word, str)
-            and self.secret_word in message['text'].lower()
-        ):
-            self._mine(miner, 'sw_mined')
 
     def _format_disburse(self, payment):
         response = None
@@ -420,7 +502,7 @@ class CoinsMiner(CoinsBase):
         return response
 
     # Action Methods
-    def _disburse_from_escrow(self, message, escrow_group_id, secret_word):
+    def _disburse_from_escrow(self, message, escrow_group_id):
         payments = self.db.escrow.query(
             _filter={
                 'escrow_group_id': escrow_group_id,
@@ -439,10 +521,8 @@ class CoinsMiner(CoinsBase):
 
         if responses:
             msg = ('*{} Mining Report*\n'
-                   'During the last pool period:```{}```\n'
-                   'The Secret word was `{}`.\n\n'
-                   'Happy Mining!').format(
-                self.name, '\n'.join(responses), secret_word)
+                   'During the last pool period:```{}```\n\n'
+                   'Happy Mining!').format(self.name, '\n'.join(responses))
 
             for channel in self.disbursement_channels:
                 self.botThread.slack_client.api_call(
@@ -469,13 +549,6 @@ class CoinsMiner(CoinsBase):
 
     def _get_next_pool(self):
         return self._get_last_pool_item('next_fillup_ts', 0)
-
-    def _get_secret_word(self):
-        word = self.db.secret_word.get(
-            self.pool_id, return_field_value='secret_word')
-        self.gsw_ts = utils.now()
-
-        return word
 
     def _load(self, prop):
         path = os.path.join(self.tx_dir, f'{prop}.json')
@@ -526,9 +599,8 @@ class CoinsMiner(CoinsBase):
 
     def _reset(self, message):
         self.next_pool = self._get_next_pool()
-        self._disburse_from_escrow(message, self.pool_id, self.secret_word)
+        self._disburse_from_escrow(message, self.pool_id)
         self.pool_id = self._get_escrow_pool_id()
-        self.secret_word = self._get_secret_word()
         self.moined = []
         self._write('moined')
         self.sw_mined = []
