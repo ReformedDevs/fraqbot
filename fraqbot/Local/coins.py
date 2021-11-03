@@ -141,7 +141,7 @@ class CoinsSecretWord(CoinsBase):
         if utils.is_delete_event(message):
             return False
 
-        channel = utils.jsearch('metadata.channel_display_name || ""', message)
+        channel = utils.jsearch('metadata.source_channel || ""', message)
 
         if channel not in self.secret_word_channels:
             return False
