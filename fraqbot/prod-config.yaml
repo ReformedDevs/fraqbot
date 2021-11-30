@@ -6,6 +6,13 @@ connectors:
       token: ${{ENV::SLACK_TOKEN}}
 helpEnabled: true
 legos:
+  AOC:
+    enabled: true
+    path: Local.aoc.AOC
+    kwargs:
+      cookie: ${{ENV::AOC_COOKIE}}
+      year: '2021'
+      board: '77993'
   APOD:
     enabled: true
     path: legos.apod.APOD
