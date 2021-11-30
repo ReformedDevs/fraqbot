@@ -1,6 +1,8 @@
+import argparse
 from decimal import Decimal
 import logging
 import os
+import re
 import sys
 
 import jmespath
@@ -12,6 +14,7 @@ LOCAL_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)))
 if LOCAL_DIR not in sys.path:
     sys.path.append(LOCAL_DIR)
 
+from helpers.file import load_file  # noqa 402
 from helpers.utils import call_rest_api  # noqa 402
 from helpers.text import format_table  # noqa 402
 
@@ -29,9 +32,10 @@ class AOC(Lego):
                 self.botThread = slack[0].botThread
 
         self.cookie = kwargs.get('cookie')
-        self.year = kwargs.get('year')
+        self.year = kwargs.get('year', '2021')
         self.board = kwargs.get('board')
-        self.user_map = kwargs.get('user_map', {})
+        self._init_user_map()
+        self._init_parser()
 
     def listening_for(self, message):
         text = message.get('text', '')
@@ -46,23 +50,55 @@ class AOC(Lego):
             opts = self.build_reply_opts(message)
             self.reply(message, response, opts)
 
-    def _get_leaderboard(self):
+    def _init_user_map(self):
+        self.user_map = load_file(
+            os.path.join(LOCAL_DIR, 'data', 'aoc_map.yaml'))
+
+    def _init_parser(self):
+        self.parser = argparse.ArgumentParser(
+            prog='!aoc',
+            description='Retrieve TRD\'s Advent of Code leaderboard.',
+            add_help=False
+        )
+        self.parser.add_argument(
+            '-h',
+            '--help',
+            action='store_true',
+            help='show this help message and exit'
+        )
+        self.parser.add_argument(
+            '-y',
+            '--year',
+            type=str,
+            help='What year to retrieve. Defaults to the current year.',
+            default=self.year
+        )
+        self.parser.add_argument(
+            '-c',
+            '--column',
+            type=str,
+            help='Which column to sort the data on. Defaults to score.',
+            choices=['name', 'score', 'stars', 'pika'],
+            default='score'
+        )
+        self.parser.add_argument(
+            '-s',
+            '--sort',
+            type=str,
+            help='Which direction to sort the data. Defaults to DESC.',
+            choices=['ASC', 'DESC'],
+            default='DESC'
+        )
+
+    def _get_leaderboard(self, year):
         headers = {'Cookie': self.cookie}
-        url = (f'https://adventofcode.com/{self.year}/leaderboard/private/view'
+        url = (f'https://adventofcode.com/{year}/leaderboard/private/view'
                f'/{self.board}.json')
         return call_rest_api(
             __name__, 'get', url, response='json', headers=headers)
 
-    def _sort_leaderboard(self, leaderboard, params):
-        sort_key = 'score'
-        reverse = True
-
-        if len(params) > 1:
-            sort_key = params[1] if params[1] in leaderboard[0] else sort_key
-
-        if len(params) > 2:
-            reverse = False if params[2].lower() == 'asc' else True
-
+    def _sort_leaderboard(self, leaderboard, sort_key, direction):
+        reverse = direction == 'DESC'
         srch = ('[].{name: slack_name, score: local_score, '
                 'stars: stars, pika: pika}')
         leaders = sorted(
@@ -81,7 +117,14 @@ class AOC(Lego):
         return name
 
     def _build_response(self, message):
-        leaderboard = self._get_leaderboard()
+        params = re.split(r'\s+', message)
+        params.pop(0)
+        args = self.parser.parse_args(params)
+
+        if args.help:
+            return self.get_help()
+
+        leaderboard = self._get_leaderboard(args.year)
         logger.debug('LEADERBOARD: {}'.format(leaderboard))
         if leaderboard:
             new = []
@@ -94,7 +137,8 @@ class AOC(Lego):
                     new.append(v)
 
             leaderboard = self._calculate_suplemental_values(new)
-            leaders = self._sort_leaderboard(leaderboard, message.split(' '))
+            leaders = self._sort_leaderboard(
+                leaderboard, args.column, args.sort)
 
             fields = [
                 {'field': 'name', 'display': 'NAME'},
@@ -109,6 +153,9 @@ class AOC(Lego):
             return None
 
     def _calculate_suplemental_values(self, leaderboard):
+        if not leaderboard:
+            return leaderboard
+
         pika = [
             {'stars': x['stars'], 'score': x['local_score']}
             for x in leaderboard
@@ -136,7 +183,4 @@ class AOC(Lego):
         return 'AOC'
 
     def get_help(self):
-        return ('Returns Advent of Code private leaderboard info.\n'
-                'Usage !aoc [sort column] [sort direction]\n'
-                'Columns: name, score, stars, pika\n'
-                'Directions: asc, desc')
+        return f'```{self.parser.format_help()}```'
