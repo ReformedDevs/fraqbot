@@ -31,7 +31,7 @@ class AOC(Lego):
             if slack:
                 self.botThread = slack[0].botThread
 
-        self.cookie = kwargs.get('cookie')
+        self.session = kwargs.get('session')
         self.year = kwargs.get('year', '2021')
         self.board = kwargs.get('board')
         self._init_user_map()
@@ -39,7 +39,7 @@ class AOC(Lego):
 
     def listening_for(self, message):
         text = message.get('text', '')
-        if not isinstance(text, str) or not self.cookie:
+        if not isinstance(text, str) or not self.session:
             return False
 
         return text.lower().startswith('!aoc')
@@ -91,7 +91,7 @@ class AOC(Lego):
         )
 
     def _get_leaderboard(self, year):
-        headers = {'Cookie': self.cookie}
+        headers = {'Cookie': f'session={self.session}'}
         url = (f'https://adventofcode.com/{year}/leaderboard/private/view'
                f'/{self.board}.json')
         return call_rest_api(

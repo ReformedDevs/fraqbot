@@ -10,7 +10,7 @@ legos:
     enabled: true
     path: Local.aoc.AOC
     kwargs:
-      cookie: ${{ENV::AOC_COOKIE}}
+      session: ${{ENV::AOC_COOKIE}}
       year: '2021'
       board: '77993'
   APOD:
@@ -236,4 +236,4 @@ legos:
       api: ${{ENV::FRAQ_QUOTES}}/trd/pikachu
       url_base: ${{ENV::BUCKET}}/cheats/
 log_file: /tmp/logs/fraqbot.log
-log_level: DEBUG
+log_level: INFO
