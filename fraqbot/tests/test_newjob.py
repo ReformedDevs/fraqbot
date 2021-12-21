@@ -4,7 +4,7 @@ import sys
 import threading
 
 from Legobot.Lego import Lego
-from mock import patch
+from unittest.mock import patch
 
 
 LOCAL_PATH = os.path.join(

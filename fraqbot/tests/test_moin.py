@@ -4,7 +4,7 @@ import threading
 import time
 
 from Legobot.Lego import Lego
-from mock import patch
+from unittest.mock import patch
 
 LOCAL_PATH = os.path.join(
     os.path.abspath(os.path.dirname(__file__)),
