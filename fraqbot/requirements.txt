@@ -1,19 +1,13 @@
 jmespath==0.10.0
 jsonschema==3.2.0
 Legobot>=1.3.6
-legos.xkcd==0.2.1
-legos.wtf
-legos.stocks
-legos.codinglove
-# legos.dice
-legos.ctftime
-legos.fact_sphere==0.2.2
-legos.memes>=0.3.7
 legos.apod==0.1.2
-#legos.markov
-#redis==2.10.6
-#markovify
-#nltk
-pyyaml==5.4.1
-sqlalchemy==1.4.4
+legos.fact_sphere==0.2.2
+legos.stocks==0.1.5
+legos.wtf==0.1.3
+legos.xkcd==0.2.1
+# legos.dice
+legos.memes>=0.3.8
+pyyaml==6.0
+sqlalchemy==1.4.28
 tabulate==0.8.9

@@ -1,4 +1,4 @@
-FROM python:3.8.5
+FROM python:3.10.0
 
 RUN mkdir /tmp/logs
 WORKDIR /usr/src/app
@@ -14,6 +14,7 @@ RUN pip install -e .
 WORKDIR /usr/src/app
 COPY requirements.txt ./
 RUN pip install -r ./requirements.txt
+RUN pip install -U Pykka
 COPY . .
 RUN mv prod-config.yaml config.yaml
 CMD python chatbot.py
