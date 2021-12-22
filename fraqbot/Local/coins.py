@@ -12,7 +12,6 @@ sys.path.append(LOCAL_DIR)
 
 
 from helpers.coins import CoinsBase  # noqa: E402
-from helpers import file  # noqa: E402
 from helpers import text  # noqa: E402
 from helpers import utils  # noqa: E402
 
@@ -340,6 +339,7 @@ class CoinsPoolManager(CoinsBase):
         super().__init__(baseplate, lock, **kwargs)
 
         utils.set_properties(self, kwargs.get('properties', []), __file__)
+        self.paid = []
         self._init_escrow()
         self.next_pool = self._get_next_pool()
         self._update_pool()
@@ -402,6 +402,23 @@ class CoinsPoolManager(CoinsBase):
         return (f'Next fill up and disbursement in {til_next}')
 
     # Action Methods
+    def _announce_payments(self, payees):
+        payments = [
+            (f'- <@{k}> received {v} {self.name}')
+            for k, v in payees.items()
+        ]
+        msg = ('*{} Participation Trophy Report*\n'
+               'During the last pool period:```{}```\n\n'
+               'Happy Mining!').format(self.name, '\n'.join(payments))
+
+        for channel in self.disbursement_channels:
+            self.botThread.slack_client.api_call(
+                'chat.postMessage',
+                as_user=True,
+                channel=channel,
+                text=msg
+            )
+
     def _get_next_pool(self):
         next_pool = self.db.pool_history.query(
             limit=1, sort='id,desc', return_field_value='next_fillup_ts')
@@ -426,9 +443,54 @@ class CoinsPoolManager(CoinsBase):
 
         return ', '.join(out)
 
+    def _get_participants(self, oldest):
+        participants = []
+        for channel in self.participant_channels:
+            participants += utils.call_slack_api(
+                self.botThread.slack_client,
+                'conversations.history',
+                True,
+                'messages[].user',
+                channel=channel,
+                oldest=f'{oldest}.000000'
+            )
+
+        return [
+            p for p in participants
+            if p not in self.pool_excludes + ['USSLACKBOT']
+        ]
+
+    def _pay_participants(self):
+        oldest = self.db.pool_history.query(
+            sort={'field': 'id', 'direction': 'DESC'},
+            limit=1,
+            return_field_value='fillup_ts'
+        )
+        self.paid.append(oldest)
+        participants = self._get_participants(oldest)
+        payees = {}
+        balance = self._get_balance('pool')
+        multipliers = [23, 29, 31, 37, 41, 43, 47, 53]
+
+        while True:
+            if balance < 159 or not participants:
+                break
+
+            user = choice(participants)
+            participants = [p for p in participants if p != user]
+            amount = choice((1, 2, 3)) * choice(multipliers)
+            payees[user] = amount
+            if self._pay('pool', user, amount, 'Participation Trophies!'):
+                balance -= amount
+
+        self._announce_payments(payees)
+
     def _update_pool(self):
         _now = utils.now()
         if self.next_pool <= _now:
+            if self.next_pool not in self.paid:
+                self._pay_participants()
+
             self.next_pool = _now + (randint(4, 15) * 3600)
             amt = randint(25, 75) * 10
             pool_balance = self._get_balance('pool', True)
@@ -441,194 +503,6 @@ class CoinsPoolManager(CoinsBase):
                         'next_fillup_ts': self.next_pool,
                         'amount': amt
                     })
-
-
-class CoinsMiner(CoinsBase):
-    def __init__(self, baseplate, lock, *args, **kwargs):
-        super().__init__(baseplate, lock, **kwargs)
-
-        self.moined = self._load('moined')
-        self.sw_mined = self._load('sw_mined')
-        self.next_pool = self._get_next_pool()
-        self.pool_id = self._get_escrow_pool_id()
-
-    # Std Methods
-    def listening_for(self, message):
-        if utils.is_delete_event(message):
-            return False
-
-        _handle = False
-        text = message.get('text')
-        user = message.get('metadata', {}).get('source_user')
-        channel = message.get('metadata', {}).get('source_channel')
-
-        if (
-            isinstance(text, str)
-            and user
-            and user not in self.pool_excludes
-            and channel
-        ):
-            _handle = any([self._listening_for_moin(text, user)])
-
-        if utils.now() > self.next_pool and not _handle:
-            self._reset(message)
-
-        return _handle
-
-    def _listening_for_moin(self, text, user):
-        return 'moin' in text.lower() and user not in self.moined
-
-    # Handler Methods
-    def handle(self, message):
-        miner = message['metadata']['source_user']
-        if 'moin' in message['text'].lower():
-            self._mine(miner, 'moined')
-
-    def _format_disburse(self, payment):
-        response = None
-        miner = payment['payee_id']
-        amount = payment['amount']
-
-        if payment['memo'].startswith('Moin'):
-            memo = 'Happy Moin!'
-            _type = 'Moin'
-        elif payment['memo'].startswith('Secret Word'):
-            memo = 'You guessed the secret word!'
-            _type = 'Secret Word'
-        else:
-            memo = ''
-            _type = ''
-
-        paid = self._pay('escrow', miner, amount, memo)
-        if paid:
-            response = (f'- <@{miner}> received {amount} {self.name} from '
-                        f'the Pool for {_type}.')
-
-        return response
-
-    # Action Methods
-    def _disburse_from_escrow(self, message, escrow_group_id):
-        payments = self.db.escrow.query(
-            _filter={
-                'escrow_group_id': escrow_group_id,
-                'paid': False
-            },
-            sort='id,asc'
-        )
-        responses = []
-
-        for payment in payments:
-            response = self._format_disburse(payment)
-            if response:
-                responses.append(response)
-                payment['paid'] = True
-                self.db.escrow.upsert(payment)
-
-        if responses:
-            msg = ('*{} Mining Report*\n'
-                   'During the last pool period:```{}```\n\n'
-                   'Happy Mining!').format(self.name, '\n'.join(responses))
-
-            for channel in self.disbursement_channels:
-                self.botThread.slack_client.api_call(
-                    'chat.postMessage',
-                    as_user=True,
-                    channel=channel,
-                    text=msg
-                )
-
-    def _get_escrow_pool_id(self):
-        return self._get_last_pool_item('id', 1)
-
-    def _get_last_pool_item(self, return_field=None, default=None):
-        q_kwargs = {'limit': 1, 'sort': 'id,desc'}
-        if return_field:
-            q_kwargs['return_field_value'] = return_field
-
-        data = self.db.pool_history.query(**q_kwargs)
-
-        if data is None and return_field:
-            data = default
-
-        return data
-
-    def _get_next_pool(self):
-        return self._get_last_pool_item('next_fillup_ts', 0)
-
-    def _load(self, prop):
-        path = os.path.join(self.tx_dir, f'{prop}.json')
-        if os.path.isfile(path):
-            return file.load_file(path)
-
-        return []
-
-    def _load_moined(self):
-        path = os.path.join(self.tx_dir, 'moined.json')
-        if os.path.isfile(path):
-            return file.load_file(path)
-
-        return []
-
-    def _mine(self, miner, prop):
-        mined = getattr(self, prop)
-        if miner not in mined:
-            mined.append(miner)
-            setattr(self, prop, mined)
-            self._write(prop)
-
-            if prop == 'moined' and not choice(CHOICES):
-                return None
-
-            pool_balance = self._get_balance('pool')
-            opts = []
-            if pool_balance >= 14:
-                opts.append(7)
-            if pool_balance >= 22:
-                opts.append(11)
-            if pool_balance >= 26:
-                opts.append(13)
-            if pool_balance >= 34:
-                opts.append(17)
-
-            divvy = None
-            if opts:
-                divisor = choice(opts)
-                divvy = pool_balance // divisor
-
-            if opts and pool_balance and divvy:
-                divvy = divvy // 2 + 1 if divvy >= 3 else 2
-                amt = randint(2, divvy) * divisor
-                self._to_escrow(miner, amt, prop)
-
-        return None
-
-    def _reset(self, message):
-        self.next_pool = self._get_next_pool()
-        self._disburse_from_escrow(message, self.pool_id)
-        self.pool_id = self._get_escrow_pool_id()
-        self.moined = []
-        self._write('moined')
-        self.sw_mined = []
-        self._write('sw_mined')
-
-    def _to_escrow(self, miner, amt, prop):
-        m_type = 'Secret Word' if prop == 'sw_mined' else 'Moin'
-        tx_msg = (f'{m_type} Mining for {miner}. '
-                  f'Escrow group id: {self.pool_id}')
-
-        if self._pay('pool', 'escrow', amt, tx_msg):
-            self.db.escrow.upsert({
-                'escrow_group_id': self.pool_id,
-                'tx_timestamp': utils.now(),
-                'payer_id': 'pool',
-                'payee_id': miner,
-                'amount': amt,
-                'memo': tx_msg
-            })
-
-    def _write(self, prop):
-        path = os.path.join(self.tx_dir, f'{prop}.json')
-        file.write_file(path, getattr(self, prop), 'json')
 
 
 class CoinsAdmin(CoinsBase):

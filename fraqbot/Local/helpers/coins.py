@@ -24,7 +24,11 @@ class CoinsBase(Lego):
 
         self._set_bot_thread()
         self._set_defaults(kwargs)
-        for prop in ['secret_word_channels', 'disbursement_channels']:
+        for prop in [
+            'secret_word_channels',
+            'disbursement_channels',
+            'participant_channels'
+        ]:
             if hasattr(self, prop):
                 setattr(self,  prop, [
                     self.botThread.get_channel_id_by_name(channel)

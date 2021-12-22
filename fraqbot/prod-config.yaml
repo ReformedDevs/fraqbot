@@ -82,19 +82,6 @@ legos:
             raw: true
             split_lines: true
             default: []
-  AshokCoinMiner:
-    enabled: true
-    path: Local.coins.CoinsMiner
-    kwargs:
-      name: AshokCoin
-      defaults:
-        admins: ${{LIST::ENV::ADMINS}}
-        pool_excludes:
-          - ${{ENV::FRAQBOT_ID}}
-        disbursement_channels:
-          - general
-      acl:
-        blacklist: ${{LIST::ENV::MINER_BLACKLIST}}
   AshokCoinPool:
     enabled: true
     path: Local.coins.CoinsPoolManager
