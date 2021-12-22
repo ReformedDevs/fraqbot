@@ -97,6 +97,9 @@ legos:
         secret_word_channels:
           - general
           - random
+        participant_channels:
+          - general
+          - random
         disbursement_channels:
           - general
       properties:
