@@ -450,7 +450,7 @@ class CoinsPoolManager(CoinsBase):
                 self.botThread.slack_client,
                 'conversations.history',
                 True,
-                'messages[].user',
+                'messages[?!contains(keys(@), `"bot_id"`)].user',
                 channel=channel,
                 oldest=f'{oldest}.000000'
             )
