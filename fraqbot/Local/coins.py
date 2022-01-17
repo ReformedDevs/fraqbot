@@ -37,6 +37,8 @@ class Coins(CoinsBase):
                      f'`{triggers} user_balance <user>`')
         lines.append('        • To dedupe moin payouts: '
                      f'`{triggers} dedupe [<user>]`')
+        lines.append('        • To transfer (e.g. to unpay fraqbot): '
+                     f'`{triggers} transfer <user> <user> [<int>]`')
 
         return '\n'.join(lines)
 
@@ -585,6 +587,26 @@ class CoinsAdmin(CoinsBase):
             user = params[0]
             user = user[2:-1] if user.startswith('<@') else user
             return self._format_get_balance(user)
+
+    def _handle_transfer(self, message, params):
+        if self._is_private_message(message) and params:
+            payer = params[0]
+            payer = payer[2:-1] if payer.startswith('<@') else payer
+            payee = params[1]
+            payee = payee[2:-1] if payee.startswith('<@') else payee
+
+            if len(params) > 2:
+                amt = params[2]
+                try:
+                    amt = int(amt)
+                except Exception:
+                    return f'{amt} is an invalid amount.'
+            else:
+                amt = self._get_balance(payer)
+
+        if self._pay(payer, payee, amt, 'Admin transfer'):
+            return 'Transfered {} {} from {} to {} successfully'.format(
+                amt, self.name, params[0], params[1])
 
     # Action Methods
     def _check_dupes_against_escrow(self, user, dupes):
