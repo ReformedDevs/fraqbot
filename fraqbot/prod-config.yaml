@@ -100,6 +100,7 @@ legos:
         participant_channels:
           - general
           - random
+          - career-chat
         disbursement_channels:
           - general
       properties:
