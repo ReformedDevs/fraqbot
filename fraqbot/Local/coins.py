@@ -582,6 +582,19 @@ class CoinsAdmin(CoinsBase):
             if current_escrow_id:
                 return self._format_get_escrow(current_escrow_id)
 
+    def _handle_get_secret_word(self, message, params):
+        if self._is_private_message(message):
+            record = self.db.secret_word.query(limit=1, sort='id, DESC')
+
+            if not record:
+                return 'Error getting secret word from db.'
+
+            completed = 'has' if record['completed'] is True else 'has not'
+            word = record['secret_word']
+
+            return (f'The latest secret word is `{word}` and '
+                    f'{completed} been guessed')
+
     def _handle_user_balance(self, message, params):
         if self._is_private_message(message) and params:
             user = params[0]
