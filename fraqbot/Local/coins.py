@@ -152,6 +152,16 @@ class CoinsSecretWord(CoinsBase):
         if not isinstance(text, str):
             return False
 
+        splits = text.split(' ')
+
+        if (
+            len(splits) > 1
+            and splits[0] in self.triggers
+            and splits[1] == 'reset_secret_word'
+        ):
+            self._admin_reset_secret_word(message)
+            return False
+
         match = re.search(f'\\W*{self.secret_word}\\W*', text.lower())
 
         return match
@@ -164,6 +174,16 @@ class CoinsSecretWord(CoinsBase):
         return None
 
     # Action Methods
+    def _admin_reset_secret_word(self, message):
+        user = message.get('metadata', {}).get('source_user')
+
+        if user and user in self.admins:
+            old_word = self.secret_word
+            self._set_secret_word(True)
+            opts = self.build_reply_opts(message)
+            msg = f'Secret word reset. Previous secret word was `{old_word}`.'
+            self.reply(message, msg, opts)
+
     def _announce_secret_word(self, word, message):
         paid = self._payout(word, message)
 
@@ -318,10 +338,14 @@ class CoinsSecretWord(CoinsBase):
             record['completed'] = True
             self.db.secret_word.upsert(record)
 
-    def _set_secret_word(self):
+    def _set_secret_word(self, skip_current=False):
         record = self.db.secret_word.query(limit=1, sort='id, DESC')
 
-        if record and record['completed'] is not True:
+        if (
+            record
+            and record['completed'] is not True
+            and skip_current is False
+        ):
             self.secret_word = record['secret_word']
             self.secret_ts = record['ts']
         else:
