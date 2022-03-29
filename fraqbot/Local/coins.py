@@ -276,6 +276,7 @@ class CoinsSecretWord(CoinsBase):
             word_pool[user] += re.findall(r':[a-zA-Z0-9_-]+:', message['text'])
             string = re.sub(
                 r'(:[a-zA-Z0-9_-]+:)|(<@U[A-Z0-9]+>)', '', message['text'])
+            string = re.sub(r'\S+\.\S+', '', string)
             words = re.findall(r'\b\w+\b', string)
             word_pool[user] += [
                 w.lower() for w in words
