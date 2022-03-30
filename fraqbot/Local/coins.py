@@ -178,6 +178,8 @@ class CoinsSecretWord(CoinsBase):
         user = message.get('metadata', {}).get('source_user')
 
         if user and user in self.admins:
+            LOGGER.info('Reset secret word invoked in {} by {}'.format(
+                message['metadata']['source_channel'], user))
             old_word = self.secret_word
             self._set_secret_word(True)
             opts = self.build_reply_opts(message)
@@ -350,6 +352,7 @@ class CoinsSecretWord(CoinsBase):
             self.secret_word = record['secret_word']
             self.secret_ts = record['ts']
         else:
+            LOGGER.info('Setting new secret word.')
             word, user = self._generate_secret_word()
             now = utils.now()
             self.db.secret_word.upsert({
