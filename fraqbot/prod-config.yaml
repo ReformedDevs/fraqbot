@@ -68,6 +68,9 @@ legos:
     path: Local.coins.CoinsSecretWord
     kwargs:
       name: AshokCoin
+      triggers:
+        - '!ashokcoin'
+        - '!ak'
       defaults:
         admins: ${{LIST::ENV::ADMINS}}
         pool_excludes:
@@ -227,4 +230,4 @@ legos:
       api: ${{ENV::FRAQ_QUOTES}}/trd/pikachu
       url_base: ${{ENV::BUCKET}}/cheats/
 log_file: /tmp/logs/fraqbot.log
-log_level: INFO
+log_level: DEBUG
