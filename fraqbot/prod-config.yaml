@@ -203,6 +203,28 @@ legos:
           file:
             path: 'data/lists/default_emojis.json'
             default: []
+  ScoreBoard:
+    enabled: true
+    path: Local.score_board.ScoreBoard
+    kwargs:
+      configs:
+        Wordle:
+          channels:
+            - wordle
+          condition: '!contains([`0`, `1`], remainder(to_number(`${1}`), `7`))'
+          default_score: 7
+          emoji: word
+          file_type: json
+          my_scores_sort: puzzle, asc
+          rankings_sort: score, asc
+          regex: Wordle (\d+) ([X1-6])/6
+          score_field: score
+          transform: '{user: metadata.source_user, puzzle: to_number(`${1}`), score: to_number(`${2}`) || `7`}'
+          type: regex
+          uid_fields:
+            - user
+            - puzzle
+          user_field: user
   Shakespeare:
     enabled: true
     path: Local.shakespeare.Shakespeare
