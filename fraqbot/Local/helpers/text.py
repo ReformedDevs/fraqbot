@@ -104,6 +104,8 @@ def tabulate_data(data, _map, fields=None, user_id_field=None, thread=None):
             ]
             for d in new_data
         ]
+    else:
+        table_data = new_data
 
     mapped_fields = [_map.get(f, f) for f in fields]
 

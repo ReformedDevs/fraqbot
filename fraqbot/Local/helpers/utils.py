@@ -146,6 +146,10 @@ class CustomFunctions(functions.Functions):
 
         return ' '.join(items[:count])
 
+    @functions.signature({'types': ['number']}, {'types': ['number']})
+    def _func_remainder(self, dividend, divisor):
+        return int(dividend % divisor)
+
 
 def jsearch(transform, data):
     return jmespath.search(
