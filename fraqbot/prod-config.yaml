@@ -208,6 +208,21 @@ legos:
     path: Local.score_board.ScoreBoard
     kwargs:
       configs:
+        Quordle:
+          channels:
+            - wordle-variations
+          default_score: 40
+          emoji: squirtle
+          file_type: json
+          my_scores_sort: puzzle, asc
+          rankings_sort: score, asc
+          score_field: score
+          script_path: scripts.quordle.Quordle
+          type: script
+          uid_fields:
+            - user
+            - puzzle
+          user_field: user
         Wordle:
           channels:
             - wordle

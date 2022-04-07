@@ -1,5 +1,6 @@
 import logging
 import os
+from pydoc import locate
 import re
 import sys
 
@@ -203,7 +204,7 @@ class ScoreBoard(Lego):
         updated = self._update_data(name, record)
 
         if updated:
-            # self._react(message, cfg.get('emoji', 'word'))
+            self._react(message, cfg.get('emoji', 'word'))
             self._save_data(name)
 
     def _process_regex(self, message, cfg):
@@ -241,6 +242,48 @@ class ScoreBoard(Lego):
                         f'Message: {message}\n'
                         f'Transform: {transform}\n'
                         f'Error: {e}')
+
+        return record
+
+    def _process_script(self, message, cfg):
+        record = {}
+        text = message.get('text', '')
+
+        if not text or not isinstance('text', str):
+            return record
+
+        script_path = cfg.get('script_path', '')
+        script = locate(script_path)
+
+        if not script:
+            return record
+
+        check_is_record = getattr(script, 'is_record', None)
+
+        if not check_is_record:
+            return record
+
+        is_record = check_is_record(message, cfg)
+
+        if not is_record:
+            return record
+
+        check_condition = getattr(script, 'check_condition', None)
+
+        if not check_condition:
+            return record
+
+        cond_pass = check_condition(message, cfg)
+
+        if not cond_pass:
+            return record
+
+        parse_record = getattr(script, 'parse_record', None)
+
+        if not parse_record:
+            return record
+
+        record = parse_record(message, cfg)
 
         return record
 
