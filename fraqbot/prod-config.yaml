@@ -264,7 +264,7 @@ legos:
     path: Local.yourface.YourFace
     kwargs:
       token: ${{ENV::SLACK_TOKEN}}
-      api: ${{ENV::FRAQ_QUOTES}}/trd/pikachu
+      api: ${{ENV::BITRANCH}}/yourface
       url_base: ${{ENV::BUCKET}}/cheats/
 log_file: /tmp/logs/fraqbot.log
 log_level: DEBUG

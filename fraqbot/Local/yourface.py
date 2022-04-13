@@ -56,8 +56,7 @@ class YourFace(Lego):
 
     def _get_your_face_quote(self):
         quote = call_rest_api(
-            __name__, 'get', self.api, response='json', default={})
-        quote = quote.get('quote')
+            __name__, 'get', self.api, default={})
 
         if not quote:
             quote = random.choice(self.error_responses)
