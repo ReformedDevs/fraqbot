@@ -442,7 +442,7 @@ class CoinsPoolManager(CoinsBase):
             for k, v in payees.items()
         ]
         msg = ('*{} Participation Trophy Report*\n'
-               'During the last pool period:```{}```\n\n'
+               'During the last pool period:\n```{}```\n\n'
                'Happy Mining!').format(self.name, '\n'.join(payments))
 
         for channel in self.disbursement_channels:
