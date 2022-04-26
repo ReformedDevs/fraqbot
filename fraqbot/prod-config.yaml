@@ -214,10 +214,13 @@ legos:
           default_score: 40
           emoji: squirtle
           file_type: json
+          limit: 5
+          limit_sort: puzzle, desc
           my_scores_sort: puzzle, asc
           rankings_sort: score, asc
           score_field: score
           script_path: scripts.quordle.Quordle
+          title: Last 5 Weekday Quordles
           type: script
           uid_fields:
             - user
@@ -230,10 +233,13 @@ legos:
           default_score: 7
           emoji: word
           file_type: json
+          limit: 5
+          limit_sort: puzzle, desc
           my_scores_sort: puzzle, asc
           rankings_sort: score, asc
           regex: Wordle (\d+) ([X1-6])/6
           score_field: score
+          title: Last 5 Weekday Wordles
           transform: '{user: metadata.source_user, puzzle: to_number(`${1}`), score: to_number(`${2}`) || `7`}'
           type: regex
           uid_fields:

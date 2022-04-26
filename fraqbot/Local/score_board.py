@@ -137,8 +137,19 @@ class ScoreBoard(Lego):
         data = self.boards[name]['data']
         user_field = cfg.get('user_field', '')
         score_field = cfg.get('score_field', '')
+        limit_sort = cfg.get('limit_sort', '')
         default_score = cfg.get('default_score', 0)
         uniques = {}
+
+        if limit_sort:
+            limit = cfg.get('limit', 10)
+            (field, direction) = (lm.strip() for lm in limit_sort.split(','))
+            values = sorted(
+                set(jsearch(f'[].{field}', data)),
+                reverse=direction.lower() == 'desc'
+            )
+            values = ', '.join([f'`{v}`' for v in values[:limit]])
+            data = jsearch(f'[?contains([{values}], {field})]', data)
 
         for field in set(cfg.get('uid_fields', []) + [user_field]):
             uniques[field] = set([
@@ -346,6 +357,7 @@ class ScoreBoard(Lego):
 
     # Format Methods
     def _format_get_scores(self, name):
+        title = self.boards[name]['config'].get('title')
         response = None
         scores = self._get_scores(name)
 
@@ -356,6 +368,8 @@ class ScoreBoard(Lego):
                 user_id_field='user',
                 thread=self.botThread
             )
+            if title and response:
+                response = f'*{title}*\n{response}'
 
         return response
 
