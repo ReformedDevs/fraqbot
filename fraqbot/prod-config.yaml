@@ -208,6 +208,26 @@ legos:
     path: Local.score_board.ScoreBoard
     kwargs:
       configs:
+        Worldle:
+          channels:
+            - wordle-variations
+          condition: '!contains([`0`, `1`], remainder(to_number(`${1}`), `7`))'
+          default_score: 7
+          emoji: globe_with_meridians
+          file_type: json
+          limit: 5
+          limit_sort: puzzle, desc
+          my_scores_sort: puzzle, asc
+          rankings_sort: score, asc
+          regex: \#Worldle \#(\d+) ([X1-6])/6
+          score_field: score
+          title: Last 5 Weekday Worldles
+          transform: '{user: metadata.source_user, puzzle: to_number(`${1}`), score: to_number(`${2}`) || `7`}'
+          type: regex
+          uid_fields:
+            - user
+            - puzzle
+          user_field: user
         Quordle:
           channels:
             - wordle-variations
