@@ -211,7 +211,7 @@ legos:
         Worldle:
           channels:
             - wordle-variations
-          condition: '!contains([`0`, `1`], remainder(to_number(`${1}`), `7`))'
+          condition: '!contains([`1`, `2`], remainder(to_number(`${1}`), `7`))'
           default_score: 7
           emoji: globe_with_meridians
           file_type: json
