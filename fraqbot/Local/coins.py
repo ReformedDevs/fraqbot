@@ -1,3 +1,5 @@
+from datetime import datetime
+from datetime import timedelta
 import json
 import logging
 import os
@@ -5,6 +7,8 @@ from random import choice
 from random import randint
 import re
 import sys
+
+from pytz import timezone
 
 
 LOCAL_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)))
@@ -525,7 +529,15 @@ class CoinsPoolManager(CoinsBase):
             if self.next_pool not in self.paid:
                 self._pay_participants()
 
-            self.next_pool = _now + (randint(4, 15) * 3600)
+            today = datetime.fromtimestamp(_now, timezone('US/Eastern'))
+            tomorrow = today + timedelta(days=1)
+
+            if tomorrow.weekday() == 6:
+                tomorrow = tomorrow + timedelta(days=1)
+
+            tomorrow = re.sub(
+                r'\d\d:\d\d:\d\d', '08:30:00', tomorrow.isoformat())
+            self.next_pool = int(datetime.fromisoformat(tomorrow).timestamp())
             amt = randint(25, 75) * 10
             pool_balance = self._get_balance('pool', True)
 
